@@ -60,7 +60,7 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex h-12 items-center justify-center gap-2 rounded-btn bg-emerald px-5 text-[15px] font-bold text-white transition-colors hover:bg-emerald-dark disabled:bg-[#e3ebe7] disabled:text-[#6e837a];
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-btn bg-emerald-dark px-5 text-[15px] font-bold text-white transition-colors hover:bg-deep disabled:bg-[#e3ebe7] disabled:text-[#6e837a];
   }
   .btn-secondary {
     @apply inline-flex h-12 items-center justify-center gap-2 rounded-btn border-[1.5px] border-deep bg-surface px-5 text-[15px] font-semibold text-deep transition-colors hover:bg-mint-light;

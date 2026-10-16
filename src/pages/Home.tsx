@@ -98,7 +98,7 @@ export default function Home() {
                 </div>
                 <div className="min-w-0">
                   <div className="font-bold">{p.name}</div>
-                  <div className="mt-1 text-sm font-bold text-emerald">
+                  <div className="mt-1 text-sm font-bold text-emerald-dark">
                     {priceLabel(p)}
                   </div>
                 </div>

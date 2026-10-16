@@ -9,7 +9,7 @@ import { CartProvider } from "./lib/cart";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
-import ComingSoon from "./pages/ComingSoon";
+import Basket from "./pages/Basket";
 import NotFound from "./pages/NotFound";
 import Checkout from "./pages/Checkout";
 import OrderStatus from "./pages/OrderStatus";
@@ -19,6 +19,7 @@ const AdminApp = lazy(() => import("./pages/admin/AdminApp"));
 const AdminOrders = lazy(() => import("./pages/admin/Orders"));
 const AdminProducts = lazy(() => import("./pages/admin/Products"));
 const AdminSettings = lazy(() => import("./pages/admin/Settings"));
+const AdminEnquiries = lazy(() => import("./pages/admin/Enquiries"));
 const loading = <p style={{ padding: 40, textAlign: "center", color: "#4d7563" }}>Loading…</p>;
 
 const router = createBrowserRouter([
@@ -29,7 +30,7 @@ const router = createBrowserRouter([
       { path: "/menu", element: <Menu /> },
       { path: "/checkout", element: <Checkout /> },
       { path: "/order/:token", element: <OrderStatus /> },
-      { path: "/basket", element: <ComingSoon milestone={4} title="Custom baskets" detail="The enquiry form for birthdays, weddings and thank-you baskets. Until then, call or WhatsApp 0805 892 3302." /> },
+      { path: "/basket", element: <Basket /> },
       { path: "*", element: <NotFound /> },
     ],
   },
@@ -41,6 +42,7 @@ const router = createBrowserRouter([
       { index: true, element: <AdminOrders /> },
       { path: "products", element: <AdminProducts /> },
       { path: "settings", element: <AdminSettings /> },
+      { path: "enquiries", element: <AdminEnquiries /> },
       { path: "*", element: <Navigate to="/admin" replace /> },
     ],
   },

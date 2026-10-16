@@ -108,6 +108,7 @@ export interface AdminProduct {
   category_id: string;
   name: string;
   description: string;
+  photo_url: string | null;
   notice_hours: number;
   enquiry_only: boolean;
   active: boolean;
@@ -128,7 +129,7 @@ export async function fetchCatalogue(): Promise<AdminCatalogue> {
     c.from("locations").select("*").order("sort_order"),
     c.from("categories").select("*").order("sort_order"),
     c.from("products")
-      .select("id, slug, category_id, name, description, notice_hours, enquiry_only, active, sort_order, product_options(id, product_id, label, size, type, price, active, sort_order)")
+      .select("id, slug, category_id, name, description, photo_url, notice_hours, enquiry_only, active, sort_order, product_options(id, product_id, label, size, type, price, active, sort_order)")
       .order("sort_order"),
     c.from("availability").select("product_id, location_id, sold_out").eq("sold_out", true),
   ]);
@@ -230,5 +231,81 @@ export async function linkStaff(email: string, name: string, role: "founder" | "
 
 export async function removeStaff(userId: string): Promise<void> {
   const { error } = await db().rpc("remove_staff", { p_user_id: userId });
+  fail(error);
+}
+
+// ---------------------------------------------------------------------------
+// Basket enquiries (all staff, their own location)
+// ---------------------------------------------------------------------------
+
+export interface Enquiry {
+  id: string;
+  occasion: string;
+  budget: number | null;
+  date_needed: string | null;
+  location_id: string;
+  name: string;
+  phone: string;
+  details: string | null;
+  handled: boolean;
+  created_at: string;
+}
+
+export async function fetchEnquiries(): Promise<Enquiry[]> {
+  const { data, error } = await db()
+    .from("basket_enquiries")
+    .select("id, occasion, budget, date_needed, location_id, name, phone, details, handled, created_at")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  fail(error);
+  return (data ?? []) as Enquiry[];
+}
+
+export async function setEnquiryHandled(id: string, handled: boolean): Promise<void> {
+  const { error, count } = await db().from("basket_enquiries").update({ handled }, { count: "exact" }).eq("id", id);
+  fail(error);
+  if (count === 0) throw new Error("Nothing was saved. This enquiry belongs to the other location.");
+}
+
+// ---------------------------------------------------------------------------
+// Product photos (founder)
+// ---------------------------------------------------------------------------
+
+/** Shrinks a photo to at most 900 px on the long side and saves it as WebP, so pages stay fast. */
+async function shrink(file: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 900 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close?.();
+  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/webp", 0.82));
+  if (blob && blob.type === "image/webp") return blob;
+  return await new Promise<Blob>((r, j) => canvas.toBlob((b) => (b ? r(b) : j(new Error("Couldn't read that photo."))), "image/jpeg", 0.85));
+}
+
+export async function uploadProductPhoto(product: { id: string; slug: string }, file: File): Promise<string> {
+  if (!/^image\//.test(file.type)) throw new Error("Choose a photo (JPG, PNG or WebP).");
+  if (file.size > 15 * 1024 * 1024) throw new Error("That photo is over 15 MB. Choose a smaller one.");
+  let blob: Blob;
+  try { blob = await shrink(file); } catch { throw new Error("Couldn't read that photo. Try a JPG or PNG."); }
+  const ext = blob.type === "image/webp" ? "webp" : "jpg";
+  const path = `${product.slug}-${Date.now().toString(36)}.${ext}`;
+  const c = db();
+  const { error } = await c.storage.from("product-photos").upload(path, blob, { contentType: blob.type, cacheControl: "31536000", upsert: false });
+  if (error) {
+    if (/bucket not found/i.test(error.message)) throw new Error("Photo storage isn't set up yet. Run supabase/extras.sql in the SQL Editor.");
+    throw new Error(error.message);
+  }
+  const url = c.storage.from("product-photos").getPublicUrl(path).data.publicUrl;
+  const { error: e2, count } = await c.from("products").update({ photo_url: url }, { count: "exact" }).eq("id", product.id);
+  fail(e2);
+  if (count === 0) throw new Error("Nothing was saved. Only the founder can change photos.");
+  return url;
+}
+
+export async function removeProductPhoto(productId: string): Promise<void> {
+  const { error } = await db().from("products").update({ photo_url: null }).eq("id", productId);
   fail(error);
 }

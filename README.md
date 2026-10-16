@@ -3,7 +3,7 @@
 Ordering website for **JVee Crunch Kitchen**: homemade chin chin and cakes, fresh veggie trays, small chops and chilled drinks, with kitchens in Benin City and Abuja.
 
 **Developer:** JVeesoft-IT Solutions and Services Ltd (JVeesoft-IT)
-**Version:** 0.3.0 · Milestone 3 (Staff admin)
+**Version:** 0.4.0 · Milestone 4 (Email alerts, custom baskets, photos, link previews)
 
 Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 
@@ -28,9 +28,53 @@ Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 | Order actions: next step, paid by cash or transfer, WhatsApp the customer, cancel with a reason | Done |
 | Products (founder): prices, sizes, sold out per location, hide, add, delete | Done |
 | Settings (founder): taking orders switch, delivery fee, cut-off, hours, phone, bank details, staff | Done |
-| New-order email, basket form, product photos, link previews | Milestone 4 |
+| Pay before preparing: customer transfers for the items after ordering; kitchen starts once payment is confirmed; delivery fee paid on arrival | Done (0.3.1) |
+| Email to the owner for every new order and basket enquiry (Netlify Function + Resend) | Done |
+| Custom basket enquiry form at `/basket`, and a **Baskets** page in the admin | Done |
+| Product photos: upload in **Admin > Products > Edit**, shrunk automatically | Done |
+| Link previews for WhatsApp, Facebook, LinkedIn and X; phone home-screen icon | Done |
+| Speed and accessibility checks (Lighthouse on phone: 98–99 speed, 95–100 accessibility, 100 SEO) | Done |
+| Final testing with the owner's real details, then launch | Milestone 5 |
+
+**How payment works:** after placing an order the customer sees the account details and the amount to pay now (the items; for delivery, the delivery fee is paid on arrival). They can send the receipt on WhatsApp. Staff check the bank app for the order code, tap **Transfer received**, and only then can they tap **Start preparing**. The database enforces this, so an unpaid order can't be started by mistake. Unpaid orders can be cancelled with the reason "No payment received".
 
 ---
+
+## Updating to 0.4.0 (milestone 4)
+
+1. In Supabase **SQL Editor**, run `supabase/admin.sql` again (adds the pay-before-preparing rule if you skipped 0.3.1), then run `supabase/extras.sql`. Both are safe; nothing is deleted.
+2. Set up the email alerts (next section).
+3. Extract the zip over your project folder, run `npm install`, then commit and push. Netlify now also builds the `notify` function.
+
+---
+
+## Email alerts for new orders (Resend)
+
+Every new order and basket enquiry sends one email to the owner, with the items, total, amount to wait for, customer phone, and a button to the board.
+
+1. Sign up at [resend.com](https://resend.com) (free: 100 emails a day, 3,000 a month) **with the email address that should receive the alerts**.
+2. **API Keys > Create API key** (permission: Sending access). Copy it, it starts with `re_`.
+3. In Supabase, **Project Settings > API Keys**, copy the **service_role** key (secret; it never goes in `.env` or the code).
+4. In Netlify, **Site configuration > Environment variables**, add:
+
+   | Name | Value |
+   | --- | --- |
+   | `SUPABASE_URL` | same as `VITE_SUPABASE_URL` |
+   | `SUPABASE_SERVICE_ROLE_KEY` | the service_role key |
+   | `RESEND_API_KEY` | the `re_...` key |
+   | `ORDER_EMAIL_TO` | the address you signed up to Resend with (several: separate with commas) |
+
+5. **Deploys > Trigger deploy > Deploy site** so the function picks up the settings. Place a test order on the live site: the email arrives within a minute (check spam the first time and mark it "not spam").
+
+Until you own a domain, Resend sends from `onboarding@resend.dev` and **only to your own Resend address**. After buying a domain (for example jveecrunchkitchen.com), add it in Resend > Domains, then set `ORDER_EMAIL_FROM` to `JVee orders <orders@your-domain>` to send to any address.
+
+Emails are only sent from the live site, not from `npm run dev`. If the settings are missing, ordering still works; you just don't get the email.
+
+---
+
+## Updating from 0.3.0 (pay before preparing)
+
+Run `supabase/admin.sql` again in the SQL Editor (safe, nothing is deleted), then extract the zip over your project and push.
 
 ## Updating from milestone 2
 
@@ -105,16 +149,17 @@ Stop the site with **Ctrl + C** in the terminal.
 3. Open `supabase/schema.sql` in VS Code, copy all of it, paste it into the editor and click **Run**. You should see "Success. No rows returned".
 4. Do the same with `supabase/ordering.sql`. This adds the functions that take and track orders.
 5. Do the same with `supabase/admin.sql`. This adds the staff functions used by the admin.
-6. Do the same with `supabase/seed.sql`. This loads both locations and the full menu. Run it only once.
-7. Go to **Project Settings > API** (or the **Connect** button). Copy the **Project URL** and the **anon public** key.
-8. In VS Code, copy `.env.example` to a new file called `.env` and paste the two values in:
+6. Do the same with `supabase/extras.sql`. This adds the basket form, email tracking and the photo storage.
+7. Do the same with `supabase/seed.sql`. This loads both locations and the full menu. Run it only once.
+8. Go to **Project Settings > API** (or the **Connect** button). Copy the **Project URL** and the **anon public** key.
+9. In VS Code, copy `.env.example` to a new file called `.env` and paste the two values in:
 
    ```
    VITE_SUPABASE_URL=https://abcd1234.supabase.co
    VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
    ```
 
-9. Stop the site (Ctrl + C) and run `npm run dev` again. The yellow bar disappears, and the menu now comes from your database.
+10. Stop the site (Ctrl + C) and run `npm run dev` again. The yellow bar disappears, and the menu now comes from your database.
 
 > Never put the **service_role** key in `.env` or anywhere in the website. It's only used later in Netlify's settings for the email function.
 
@@ -128,7 +173,7 @@ From the VS Code terminal, in the project folder:
 
 ```bash
 git add .
-git commit -m "Milestone 3: staff admin"
+git commit -m "Milestone 4: email alerts, baskets, photos"
 git push
 ```
 
@@ -167,7 +212,8 @@ The free plan allows about 20 live publishes a month (each uses 15 of 300 credit
 src/
   main.tsx              page routes
   pages/                Home, Menu, Checkout, OrderStatus, and placeholders for later milestones
-  pages/admin/          SignIn, AdminApp (frame and access check), Orders, Products, Settings
+  pages/Basket.tsx      custom basket enquiry form
+  pages/admin/          SignIn, AdminApp (frame and access check), Orders, Enquiries, Products, Settings
   components/           Layout, ProductCard, OptionPicker, CartBar, QuantityStepper, LocationNotice, Icons
   lib/
     menu.tsx            loads locations, categories, products and prices
@@ -184,8 +230,11 @@ supabase/
   schema.sql            tables and access rules (fresh database only)
   ordering.sql          place_order and order_status functions
   admin.sql             next_status, set_paid and staff functions
+  extras.sql            basket enquiries, email tracking, product photo storage
+netlify/functions/
+  notify.mts            emails the owner about new orders and basket enquiries
   seed.sql              both locations and the launch menu (run once)
-public/                 logo
+public/                 logo, app icons, og-image.png (link preview picture), robots.txt
 docs/                   requirements, design, tech stack
 netlify.toml            Netlify build and page routing
 ```
@@ -202,7 +251,8 @@ These values are made up. Change them in Supabase (**Table Editor > locations / 
 - Drinks: sports drink ₦1,000, bottled water ₦300
 - Samosa pack: piece count and filling
 - Basic Unique Package with 2 L chin chin: currently the same ₦23,000 as the 1.5 L option
-- Product photos: drawn illustrations are shown until `photo_url` is set
+- Product photos: drawn illustrations are shown until a photo is added in **Admin > Products > Edit**
+- Website address in link previews: `https://jvee-kitchen.netlify.app` in `index.html`. Change it there if you move to your own domain
 
 If you change prices in `seed.sql` before launch, change them in `src/lib/demo-data.ts` too, so the preview copy matches.
 
@@ -216,6 +266,10 @@ If you change prices in `seed.sql` before launch, change them in `src/lib/demo-d
 - **Admin sign-in says the email and password don't match:** check the account exists in **Authentication > Users**. If it says "isn't confirmed", open the user and confirm them.
 - **"This account isn't on the staff list":** the sign-in works but hasn't been given access. The founder adds them in **Settings > Staff** (for the very first founder, run `make_founder` as above).
 - **Board shows "Checking every 30 seconds" instead of "Live":** that still works. For live updates, check **Database > Publications > supabase_realtime** includes the `orders` table.
+- **No email after an order:** in Netlify open **Logs > Functions > notify**. "not set up" means a setting from the email section is missing; a Resend 403 means `ORDER_EMAIL_TO` isn't your own Resend address (until a domain is verified). Redeploy after changing settings.
+- **"Photo storage isn't set up yet" when adding a photo:** run `supabase/extras.sql`.
+- **"Could not find the function public.submit_enquiry" on the basket form:** run `supabase/extras.sql`.
+- **A link shared on WhatsApp shows an old preview:** WhatsApp keeps previews for a while. Add `?v=2` to the end of the link to see the new one.
 - **`npm` is not recognised:** install Node.js 20+ from nodejs.org, then close and reopen VS Code.
 - **"Failed to fetch" right after adding `.env`:** check the URL is exactly `https://xxxx.supabase.co`. Pasting `https://` twice is an easy slip (`https://https://...`). Fix it, save, then stop and restart `npm run dev`.
 - **The red "menu could not load" bar:** check the internet connection and the two values in `.env`. If the Supabase project shows **Paused** (free projects pause after a week without use), click **Restore** in the Supabase dashboard.

@@ -125,7 +125,7 @@ export default function OptionPicker({ product, onClose, onAdded }: Props) {
               >
                 <input type="radio" name="option" checked={on} onChange={() => setOptionId(o.id)} className="h-5 w-5 accent-emerald" />
                 <span className={`flex-1 ${on ? "font-bold" : "font-semibold"}`}>{twoAxis ? o.size : o.label}</span>
-                <span className={`tabular-nums ${on ? "font-bold text-emerald" : ""}`}>{naira(o.price)}</span>
+                <span className={`tabular-nums ${on ? "font-bold text-emerald-dark" : ""}`}>{naira(o.price)}</span>
               </label>
             );
           })}

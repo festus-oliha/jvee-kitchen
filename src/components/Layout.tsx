@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet } from "react-router";
+import { isSupabaseConfigured } from "../lib/supabase";
 import { useMenu } from "../lib/menu";
 import { useCart } from "../lib/cart";
 import { hoursSummary } from "../lib/hours";
@@ -8,11 +9,11 @@ const ORDER_PHONE = "0805 892 3302";
 
 export function Brand() {
   return (
-    <Link to="/" className="flex items-center gap-2.5" aria-label="JVee Crunch Kitchen, home">
+    <Link to="/" className="flex items-center gap-2.5">
       <LogoMark size={36} />
       <span className="flex flex-col leading-none">
         <span className="text-[21px] font-extrabold tracking-[-1px]">JVee</span>
-        <span className="text-[11px] font-semibold text-emerald">crunch kitchen</span>
+        <span className="text-[11px] font-semibold text-emerald-dark">crunch kitchen</span>
       </span>
     </Link>
   );
@@ -95,7 +96,8 @@ function Footer() {
 
 export function DemoNotice() {
   const { source, error, retry } = useMenu();
-  if (source === "demo")
+  // Shown from the first paint when there is no database, so the page doesn't jump
+  if (source === "demo" || (!isSupabaseConfigured && source === "loading"))
     return (
       <div className="bg-amber-soft text-amber-ink">
         <p className="page-x py-2 text-[13px]">
@@ -133,7 +135,8 @@ export default function Layout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:p-3">Skip to content</a>
       <Header />
       <DemoNotice />
-      <main id="main" className="flex-1">
+      {/* min height keeps the footer below the fold while the menu loads, so the page doesn't jump */}
+      <main id="main" className="min-h-[calc(100svh-64px)] flex-1">
         <Outlet />
       </main>
       <Footer />

@@ -41,7 +41,7 @@ export default function ProductCard({ product: p, soldOut, closed, onAdd, inCart
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <h3 className="text-base font-bold leading-snug">{p.name}</h3>
         {hasChoices && inCart > 0 && (
-          <span className="self-start rounded-md bg-mint px-2 py-0.5 text-[11px] font-bold text-emerald">{inCart} in your cart</span>
+          <span className="self-start rounded-md bg-mint px-2 py-0.5 text-[11px] font-bold text-emerald-dark">{inCart} in your cart</span>
         )}
         {p.notice_hours > 0 && (
           <span className="self-start rounded-md bg-amber-soft px-2 py-0.5 text-[11px] font-bold text-[#8A5300]">
@@ -50,7 +50,7 @@ export default function ProductCard({ product: p, soldOut, closed, onAdd, inCart
         )}
         <p className="line-clamp-2 text-[13px] leading-snug text-muted">{p.description}</p>
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          <span className="text-[15px] font-bold text-emerald">
+          <span className="text-[15px] font-bold text-emerald-dark">
             {p.enquiry_only ? "Your budget" : priceLabel(p)}
           </span>
           {action}

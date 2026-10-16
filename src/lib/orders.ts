@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { notifyKitchen } from "./notify";
 
 export const WHATSAPP_NUMBER = "2348058923302"; // 0805 892 3302 in international form
 
@@ -31,6 +32,7 @@ export async function placeOrder(order: NewOrder): Promise<PlaceResult> {
     }
     const r = data as { code: string; tracking_token: string; total: number };
     rememberOrder(r.tracking_token, r.code);
+    notifyKitchen({ kind: "order", token: r.tracking_token });
     return { ok: true, code: r.code, token: r.tracking_token, total: r.total };
   } catch (e) {
     return { ok: false, kind: "network", message: (e as Error).message };
@@ -90,4 +92,36 @@ function rememberOrder(token: string, code: string) {
 
 export function whatsappLink(message: string): string {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
+/**
+ * Payment rule: the customer pays for the items by bank transfer straight after
+ * ordering, and the kitchen starts once that payment is confirmed. A delivery fee
+ * is paid to the rider on arrival.
+ */
+export function payNow(o: { fulfilment: "delivery" | "pickup"; subtotal: number; total: number }): number {
+  return o.fulfilment === "delivery" ? o.subtotal : o.total;
+}
+
+export interface NewEnquiry {
+  location_id: string;
+  occasion: string;
+  budget: string;
+  date_needed: string;
+  name: string;
+  phone: string;
+  details: string;
+}
+
+/** Saves a custom basket enquiry. Returns null when saved, or a message to show. */
+export async function submitEnquiry(e: NewEnquiry): Promise<{ ok: true } | { ok: false; kind: "invalid" | "network"; message: string }> {
+  if (!supabase) return { ok: false, kind: "invalid", message: "The form needs the database. Add your Supabase settings to .env first." };
+  try {
+    const { data, error } = await supabase.rpc("submit_enquiry", { p: e });
+    if (error) return { ok: false, kind: error.code === "P0001" ? "invalid" : "network", message: error.message };
+    notifyKitchen({ kind: "enquiry", id: data as string });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, kind: "network", message: (err as Error).message };
+  }
 }

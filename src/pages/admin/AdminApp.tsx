@@ -41,7 +41,8 @@ function Gate() {
     );
   }
   // Staff who aren't the founder only see orders
-  if (!isFounder && pathname.replace(/\/$/, "") !== "/admin") return <Navigate to="/admin" replace />;
+  const path = pathname.replace(/\/$/, "");
+  if (!isFounder && path !== "/admin" && path !== "/admin/enquiries") return <Navigate to="/admin" replace />;
 
   const tab = ({ isActive }: { isActive: boolean }) =>
     `flex h-11 items-center rounded-xl px-4 text-sm font-semibold transition-colors ${isActive ? "bg-zest text-deep" : "text-[#BDEBD3] hover:bg-white/10 hover:text-white"}`;
@@ -59,6 +60,7 @@ function Gate() {
           </Link>
           <nav aria-label="Admin" className="order-3 -mx-1 flex w-full gap-1 overflow-x-auto sm:order-none sm:mx-0 sm:ml-6 sm:w-auto">
             <NavLink to="/admin" end className={tab}>Orders</NavLink>
+            <NavLink to="/admin/enquiries" className={tab}>Baskets</NavLink>
             {isFounder && <NavLink to="/admin/products" className={tab}>Products</NavLink>}
             {isFounder && <NavLink to="/admin/settings" className={tab}>Settings</NavLink>}
           </nav>

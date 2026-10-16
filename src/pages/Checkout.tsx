@@ -264,6 +264,12 @@ export default function Checkout() {
               <span>{fee ? naira(fee) : "Free"}</span>
             </div>
             <div className="mt-1 flex justify-between border-t-[1.5px] border-dashed border-line pt-2 text-lg font-bold"><span>Total</span><span>{naira(total)}</span></div>
+            {fulfilment === "delivery" && fee > 0 && (
+              <div className="mt-1 flex flex-col gap-1 rounded-xl bg-mint-light px-3 py-2 text-[13px]">
+                <div className="flex justify-between font-semibold"><span>Pay now by transfer</span><span>{naira(cart.subtotal)}</span></div>
+                <div className="flex justify-between text-muted"><span>Delivery fee, paid on arrival</span><span>{naira(fee)}</span></div>
+              </div>
+            )}
           </section>
 
           {error && (
@@ -275,7 +281,9 @@ export default function Checkout() {
               {submitting ? "Placing your order…" : `Place order · ${naira(total)}`}
             </button>
             <span className="text-center text-xs text-muted">
-              Pay cash or bank transfer {fulfilment === "delivery" ? "when it arrives" : "when you collect"}
+              {fulfilment === "delivery" && fee
+                ? `Next you'll get our account details to pay ${naira(cart.subtotal)}. We start once it's paid; the ${naira(fee)} delivery fee is paid on arrival.`
+                : `Next you'll get our account details to pay ${naira(total)}. We start once it's paid.`}
             </span>
           </div>
         </aside>

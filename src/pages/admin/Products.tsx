@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useMenu } from "../../lib/menu";
 import { naira } from "../../lib/money";
 import {
-  addProduct, deleteProduct, fetchCatalogue, saveOptions, setSoldOut, updateProduct,
+  addProduct, deleteProduct, fetchCatalogue, removeProductPhoto, saveOptions, setSoldOut, updateProduct, uploadProductPhoto,
   type AdminCatalogue, type AdminProduct, type OptionDraft,
 } from "../../lib/admin";
 import { CategoryArt } from "../../components/Icons";
@@ -100,8 +100,8 @@ function ProductRow({ product: p, cat, onSaved }: { product: AdminProduct; cat: 
   return (
     <article aria-label={p.name} className={`rounded-[18px] border bg-surface p-4 ${p.active ? "border-line" : "border-dashed border-[#B9C6BA] opacity-80"}`}>
       <div className="flex flex-wrap items-start gap-3">
-        <div className="flex h-14 w-14 flex-none items-center justify-center rounded-xl" style={{ background: "var(--color-mint-light)" }}>
-          <CategoryArt category={p.category_id} size={40} />
+        <div className="flex h-14 w-14 flex-none items-center justify-center overflow-hidden rounded-xl" style={{ background: "var(--color-mint-light)" }}>
+          {p.photo_url ? <img src={p.photo_url} alt="" className="h-full w-full object-cover" /> : <CategoryArt category={p.category_id} size={40} />}
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="text-[17px] font-bold">{p.name} {!p.active && <span className="ml-1 rounded-full bg-[#E3EAE3] px-2 py-0.5 text-xs font-semibold text-muted">Hidden</span>}</h3>
@@ -129,6 +129,26 @@ function ProductRow({ product: p, cat, onSaved }: { product: AdminProduct; cat: 
       </div>
 
       {error && <p role="alert" className="mt-3 rounded-lg bg-[#FCE4E2] px-3 py-2 text-sm font-semibold text-[#7A1F17]">{error}</p>}
+
+      {editing && (
+        <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">
+          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl bg-mint-light">
+            {p.photo_url ? <img src={p.photo_url} alt={`Photo of ${p.name}`} className="h-full w-full object-cover" /> : <CategoryArt category={p.category_id} size={52} />}
+          </div>
+          <div className="flex flex-col gap-1.5 text-sm">
+            <span className="font-semibold">Photo</span>
+            <div className="flex flex-wrap gap-2">
+              <label className={`inline-flex h-10 cursor-pointer items-center rounded-lg bg-deep px-3.5 font-semibold text-white ${busy ? "opacity-50" : ""}`}>
+                {busy ? "Working…" : p.photo_url ? "Change photo" : "Add a photo"}
+                <input type="file" accept="image/*" className="sr-only" disabled={busy}
+                  onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) run(() => uploadProductPhoto(p, f).then(() => {}), `Photo saved for ${p.name}`); }} />
+              </label>
+              {p.photo_url && <button type="button" disabled={busy} onClick={() => run(() => removeProductPhoto(p.id), `Photo removed from ${p.name}`)} className="h-10 rounded-lg border-[1.5px] border-line px-3.5 font-semibold">Remove</button>}
+            </div>
+            <span className="text-xs text-muted">A square, bright photo works best. It's resized automatically.</span>
+          </div>
+        </div>
+      )}
 
       {editing && (
         <ProductEditor product={p} cat={cat} twoAxis={twoAxis} busy={busy}

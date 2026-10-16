@@ -2,8 +2,9 @@
 -- JVee Crunch Kitchen · staff admin functions (milestone 3)
 -- Developer: JVeesoft-IT Solutions and Services Ltd (JVeesoft-IT)
 --
--- Run once in Supabase: SQL Editor > New query > paste > Run.
--- Safe to run again: no data is lost.
+-- Run in Supabase: SQL Editor > New query > paste > Run.
+-- Safe to run again: no data is lost. (v0.3.1: re-run it to add the
+-- "paid before preparing" rule.)
 --
 -- Staff change orders only through these functions, so every change is
 -- checked (allowed step, right location) and records who made it.
@@ -17,6 +18,8 @@ drop policy if exists "staff update orders" on public.orders;
 --   delivery: received -> preparing -> out_for_delivery -> completed
 --   pickup:   received -> preparing -> ready            -> completed
 --   cancel:   from received or preparing, reason required
+-- Payment first: an order can't start preparing until it is marked paid
+-- (the customer transfers for the items; a delivery fee is paid on arrival).
 -- ---------------------------------------------------------------------
 create or replace function public.next_status(p_order_id uuid, p_status text, p_reason text default null)
 returns void
@@ -40,6 +43,9 @@ begin
 
   if not (p_status = any (allowed)) then
     raise exception 'Order % is "%" and can''t move to "%".', o.code, replace(o.status, '_', ' '), replace(p_status, '_', ' ');
+  end if;
+  if p_status = 'preparing' and not o.paid then
+    raise exception 'Order % isn''t paid yet. When the transfer arrives, tap "Transfer received", then start preparing.', o.code;
   end if;
   if p_status = 'cancelled' and length(btrim(coalesce(p_reason, ''))) < 3 then
     raise exception 'Please give a short reason for cancelling. The customer will see it.';
@@ -68,6 +74,9 @@ begin
   end if;
   if p_paid and coalesce(p_method, '') not in ('cash', 'transfer') then
     raise exception 'Please choose cash or bank transfer.';
+  end if;
+  if not p_paid and o.status not in ('received', 'cancelled') then
+    raise exception 'Order % is already being prepared, so the payment can''t be undone.', o.code;
   end if;
   update public.orders
      set paid = p_paid,

@@ -3,6 +3,7 @@ import { useAuth } from "../../lib/auth";
 import { useMenu } from "../../lib/menu";
 import { supabase } from "../../lib/supabase";
 import { naira } from "../../lib/money";
+import { payNow } from "../../lib/orders";
 import { fetchBoardOrders, internationalPhone, moveOrder, setPaid, startOfTodayLagos, type AdminOrder, type OrderStatusName } from "../../lib/admin";
 
 /** Live orders board (design screen 10). */
@@ -142,6 +143,8 @@ export default function Orders() {
       out[t].push(o);
     }
     out.done.reverse(); // latest finished first
+    // New: paid orders (ready to start) first, then those still waiting for payment
+    out.new.sort((a, b) => Number(b.paid) - Number(a.paid));
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, today]);
@@ -190,8 +193,9 @@ export default function Orders() {
         </p>
       )}
 
-      <section aria-label="Today" className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Waiting" value={String(byTab.new.length)} highlight={byTab.new.length > 0} />
+      <section aria-label="Today" className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+        <Stat label="Paid, ready to start" value={String(byTab.new.filter((o) => o.paid).length)} highlight={byTab.new.some((o) => o.paid)} />
+        <Stat label="Awaiting payment" value={String(byTab.new.filter((o) => !o.paid).length)} />
         <Stat label="Orders today" value={String(placedToday.length)} />
         {salesByLocation.map((s) => <Stat key={s.name} label={`Completed sales · ${s.name}`} value={naira(s.total)} />)}
       </section>
@@ -253,6 +257,8 @@ function OrderCard({ order: o, now, showLocation, locationName, onChanged }: {
   const [cancelling, setCancelling] = useState(false);
   const [reason, setReason] = useState("");
   const next = NEXT[o.status]?.(o);
+  const due = payNow(o);
+  const needsPayment = o.status === "received" && !o.paid;
   const open = o.status !== "completed" && o.status !== "cancelled";
 
   async function run(fn: () => Promise<void>, patch: Partial<AdminOrder>) {
@@ -266,7 +272,7 @@ function OrderCard({ order: o, now, showLocation, locationName, onChanged }: {
   const neededSoon = o.needed_for && new Date(o.needed_for).getTime() - now < 3 * 3600_000;
 
   return (
-    <article aria-label={`Order ${o.code}`} className={`flex flex-col gap-3 rounded-[20px] border bg-surface p-4 shadow-sm ${o.status === "received" ? "border-emerald ring-2 ring-emerald/20" : "border-line"}`}>
+    <article aria-label={`Order ${o.code}`} className={`flex flex-col gap-3 rounded-[20px] border bg-surface p-4 shadow-sm ${o.status === "received" && o.paid ? "border-emerald ring-2 ring-emerald/20" : "border-line"}`}>
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-lg font-extrabold tracking-[0.5px]">{o.code}</p>
@@ -312,19 +318,24 @@ function OrderCard({ order: o, now, showLocation, locationName, onChanged }: {
 
       {o.status === "cancelled" && o.cancel_reason && <p className="text-sm text-[#7A1F17]"><b>Cancelled:</b> {o.cancel_reason}</p>}
 
-      <div className="flex flex-wrap items-center gap-2 text-sm">
+      <div className={`flex flex-col gap-2 rounded-xl p-3 text-sm ${o.paid ? "bg-mint" : o.status === "cancelled" ? "bg-mint-light" : "bg-amber-soft"}`}>
         {o.paid ? (
-          <>
-            <span className="rounded-full bg-mint px-2.5 py-1 font-bold text-emerald-dark">Paid · {o.payment_method === "transfer" ? "transfer" : "cash"}</span>
-            {open && <button type="button" disabled={busy} onClick={() => run(() => setPaid(o.id, false, null), { paid: false, payment_method: null })} className="text-xs font-semibold text-muted underline">Undo</button>}
-          </>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-bold text-emerald-dark">✓ Paid {naira(due)} · {o.payment_method === "transfer" ? "transfer" : "cash"}</span>
+            {o.status === "received" && <button type="button" disabled={busy} onClick={() => run(() => setPaid(o.id, false, null), { paid: false, payment_method: null })} className="text-xs font-semibold text-muted underline">Undo</button>}
+          </div>
         ) : o.status !== "cancelled" ? (
           <>
-            <span className="rounded-full bg-[#FCE4E2] px-2.5 py-1 font-bold text-[#7A1F17]">Not paid</span>
-            <button type="button" disabled={busy} onClick={() => run(() => setPaid(o.id, true, "transfer"), { paid: true, payment_method: "transfer" })} className="h-9 rounded-lg border-[1.5px] border-line px-3 font-semibold hover:border-deep">Paid by transfer</button>
-            <button type="button" disabled={busy} onClick={() => run(() => setPaid(o.id, true, "cash"), { paid: true, payment_method: "cash" })} className="h-9 rounded-lg border-[1.5px] border-line px-3 font-semibold hover:border-deep">Paid cash</button>
+            <span className="font-bold text-amber-ink">Awaiting payment of {naira(due)}. Check your bank app for reference {o.code}.</span>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" disabled={busy} onClick={() => run(() => setPaid(o.id, true, "transfer"), { paid: true, payment_method: "transfer" })} className="h-10 rounded-lg bg-deep px-3.5 font-semibold text-white">Transfer received</button>
+              <button type="button" disabled={busy} onClick={() => run(() => setPaid(o.id, true, "cash"), { paid: true, payment_method: "cash" })} className="h-10 rounded-lg border-[1.5px] border-deep bg-surface px-3.5 font-semibold">Paid cash</button>
+            </div>
           </>
-        ) : null}
+        ) : <span className="text-muted">Not paid</span>}
+        {o.fulfilment === "delivery" && o.delivery_fee > 0 && o.status !== "cancelled" && (
+          <span className={o.status === "out_for_delivery" ? "font-bold text-deep" : "text-muted"}>Collect {naira(o.delivery_fee)} delivery fee on arrival</span>
+        )}
       </div>
 
       {error && <p role="alert" className="rounded-lg bg-[#FCE4E2] px-3 py-2 text-sm font-semibold text-[#7A1F17]">{error}</p>}
@@ -332,7 +343,12 @@ function OrderCard({ order: o, now, showLocation, locationName, onChanged }: {
       {cancelling ? (
         <form className="flex flex-col gap-2 rounded-xl bg-[#FCE4E2]/60 p-3" onSubmit={(e) => { e.preventDefault(); run(() => moveOrder(o.id, "cancelled", reason), { status: "cancelled", cancel_reason: reason }); }}>
           <label className="text-sm font-semibold" htmlFor={`reason-${o.id}`}>Reason (the customer will see this)</label>
-          <input id={`reason-${o.id}`} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} autoFocus placeholder="e.g. Sold out of Premium 5 L today"
+          <div className="flex flex-wrap gap-1.5">
+            {["No payment received", "Sold out today", "We can't deliver to this address"].map((r) => (
+              <button key={r} type="button" onClick={() => setReason(r)} className="rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold">{r}</button>
+            ))}
+          </div>
+          <input id={`reason-${o.id}`} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} autoFocus placeholder="e.g. No payment received"
             className="h-11 rounded-lg border-[1.5px] border-line bg-surface px-3 text-[15px] outline-none focus:border-alert" />
           <div className="flex gap-2">
             <button type="submit" disabled={busy || reason.trim().length < 3} className="h-11 flex-1 rounded-xl bg-alert font-bold text-white disabled:opacity-50">Cancel order</button>
@@ -342,8 +358,8 @@ function OrderCard({ order: o, now, showLocation, locationName, onChanged }: {
       ) : (
         <div className="flex flex-wrap gap-2">
           {next && (
-            <button type="button" disabled={busy} onClick={() => run(() => moveOrder(o.id, next.status), { status: next.status })} className="btn-primary h-12 flex-[2_1_160px]">
-              {busy ? "Saving…" : next.label}
+            <button type="button" disabled={busy || needsPayment} onClick={() => run(() => moveOrder(o.id, next.status), { status: next.status })} className="btn-primary h-12 flex-[2_1_160px]">
+              {busy ? "Saving…" : needsPayment ? "Start after payment" : next.label}
             </button>
           )}
           <a href={wa} target="_blank" rel="noreferrer" className="inline-flex h-12 flex-[1_1_110px] items-center justify-center rounded-btn border-[1.5px] border-deep bg-surface px-3 text-sm font-semibold">WhatsApp</a>
