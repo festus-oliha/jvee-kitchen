@@ -2,15 +2,19 @@ import { Link } from "react-router";
 import type { Product } from "../lib/types";
 import { priceLabel } from "../lib/menu";
 import { CATEGORY_TILE, CategoryArt } from "./Icons";
+import QuantityStepper from "./QuantityStepper";
 
 interface Props {
   product: Product;
   soldOut: boolean;
   closed: boolean;
   onAdd: (p: Product) => void;
+  /** How many of this product are in the cart (single-option products show a stepper). */
+  inCart: number;
+  onSetQuantity: (n: number) => void;
 }
 
-export default function ProductCard({ product: p, soldOut, closed, onAdd }: Props) {
+export default function ProductCard({ product: p, soldOut, closed, onAdd, inCart, onSetQuantity }: Props) {
   const hasChoices = p.options.length > 1;
   const disabled = soldOut || closed;
 
@@ -19,6 +23,8 @@ export default function ProductCard({ product: p, soldOut, closed, onAdd }: Prop
     action = <Link to="/basket" className="btn-primary h-9 rounded-xl px-3.5 text-[13px]">Ask us</Link>;
   } else if (soldOut) {
     action = <span className="text-[13px] font-bold uppercase tracking-[0.5px] text-alert">Sold out</span>;
+  } else if (!hasChoices && inCart > 0 && !closed) {
+    action = <QuantityStepper value={inCart} onChange={onSetQuantity} label={p.name} />;
   } else {
     action = (
       <button type="button" disabled={disabled} onClick={() => onAdd(p)} className="btn-primary h-9 rounded-xl px-3.5 text-[13px]">
@@ -34,6 +40,9 @@ export default function ProductCard({ product: p, soldOut, closed, onAdd }: Prop
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <h3 className="text-base font-bold leading-snug">{p.name}</h3>
+        {hasChoices && inCart > 0 && (
+          <span className="self-start rounded-md bg-mint px-2 py-0.5 text-[11px] font-bold text-emerald">{inCart} in your cart</span>
+        )}
         {p.notice_hours > 0 && (
           <span className="self-start rounded-md bg-amber-soft px-2 py-0.5 text-[11px] font-bold text-[#8A5300]">
             Order {p.notice_hours} hours ahead

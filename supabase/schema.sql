@@ -3,7 +3,7 @@
 -- Developer: JVeesoft-IT Solutions and Services Ltd (JVeesoft-IT)
 --
 -- Run this whole file once in Supabase: SQL Editor > New query > Run.
--- Then run seed.sql. Safe to re-run: it drops and recreates the tables
+-- Then run ordering.sql, then seed.sql. Safe to re-run: it drops and recreates the tables
 -- (all data is lost), so only re-run before launch.
 --
 -- Milestone 1: tables, access rules, helper functions.

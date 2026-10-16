@@ -4,6 +4,9 @@ import { useMenu } from "../lib/menu";
 import type { Product } from "../lib/types";
 import ProductCard from "../components/ProductCard";
 import LocationNotice from "../components/LocationNotice";
+import OptionPicker from "../components/OptionPicker";
+import CartBar from "../components/CartBar";
+import { useCart } from "../lib/cart";
 
 export default function Menu() {
   const { menu, location, source } = useMenu();
@@ -11,6 +14,8 @@ export default function Menu() {
   const [active, setActive] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number>(undefined);
+  const [picking, setPicking] = useState<Product | null>(null);
+  const cart = useCart();
 
   const sections = menu.categories
     .map((c) => ({ ...c, products: menu.products.filter((p) => p.category_id === c.id) }))
@@ -49,12 +54,22 @@ export default function Menu() {
 
   const closed = !!location && !location.taking_orders;
 
-  function onAdd(p: Product) {
-    // Milestone 2 replaces this with the size picker and cart.
+  function showToast(message: string) {
     window.clearTimeout(toastTimer.current);
-    setToast(`${p.name}: ordering opens in the next update.`);
-    toastTimer.current = window.setTimeout(() => setToast(null), 3000);
+    setToast(message);
+    toastTimer.current = window.setTimeout(() => setToast(null), 2500);
   }
+
+  function onAdd(p: Product) {
+    if (p.options.length > 1) return setPicking(p);
+    if (p.options[0]) {
+      cart.add(p.options[0].id);
+      showToast(`Added ${p.name}`);
+    }
+  }
+
+  const inCart = (p: Product) =>
+    cart.lines.filter((l) => l.product.id === p.id).reduce((n, l) => n + l.quantity, 0);
 
   return (
     <div className="page-x pt-4 sm:pt-8">
@@ -88,7 +103,7 @@ export default function Menu() {
         </div>
       )}
 
-      <div className="flex flex-col gap-7 pb-6 pt-3">
+      <div className={`flex flex-col gap-7 pt-3 ${cart.count ? "pb-28" : "pb-6"}`}>
         {sections.map((s) => (
           <section key={s.id} id={s.id} className="scroll-mt-[132px] sm:scroll-mt-[150px]">
             <h2 className="label-caps mb-3">{s.name}</h2>
@@ -100,6 +115,8 @@ export default function Menu() {
                   closed={closed}
                   soldOut={!!location && p.sold_out_at.includes(location.id)}
                   onAdd={onAdd}
+                  inCart={inCart(p)}
+                  onSetQuantity={(n) => p.options[0] && cart.setQuantity(p.options[0].id, n)}
                 />
               ))}
             </div>
@@ -107,7 +124,10 @@ export default function Menu() {
         ))}
       </div>
 
-      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex justify-center px-4">
+      {picking && <OptionPicker product={picking} onClose={() => setPicking(null)} onAdded={showToast} />}
+      <CartBar />
+
+      <div aria-live="polite" className={`pointer-events-none fixed inset-x-0 z-40 ${cart.count ? "bottom-24" : "bottom-5"} flex justify-center px-4`}>
         {toast && <div className="rounded-xl bg-deep px-4 py-3 text-sm font-semibold text-white shadow-lg">{toast}</div>}
       </div>
     </div>

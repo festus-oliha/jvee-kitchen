@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet } from "react-router";
 import { useMenu } from "../lib/menu";
+import { useCart } from "../lib/cart";
 import { hoursSummary } from "../lib/hours";
 import { BagIcon, LogoMark, PinIcon } from "./Icons";
 
@@ -19,6 +20,7 @@ export function Brand() {
 
 function Header() {
   const { location, menu, setLocationId } = useMenu();
+  const { count } = useCart();
   const navClass = ({ isActive }: { isActive: boolean }) =>
     `rounded-lg px-1 py-1 text-[15px] font-medium ${isActive ? "text-emerald" : "text-deep hover:text-emerald"}`;
 
@@ -46,8 +48,11 @@ function Header() {
               <svg className="pointer-events-none absolute right-2.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
             </label>
           )}
-          <Link to="/checkout" aria-label="Cart" className="flex h-11 w-11 items-center justify-center rounded-btn border-[1.5px] border-line bg-surface text-deep hover:bg-mint-light">
+          <Link to="/checkout" aria-label={count ? `Cart, ${count} items` : "Cart, empty"} className="relative flex h-11 w-11 items-center justify-center rounded-btn border-[1.5px] border-line bg-surface text-deep hover:bg-mint-light">
             <BagIcon />
+            {count > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald px-1 text-[11px] font-bold text-white">{count}</span>
+            )}
           </Link>
         </div>
       </div>

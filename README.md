@@ -3,7 +3,7 @@
 Ordering website for **JVee Crunch Kitchen**: homemade chin chin and cakes, fresh veggie trays, small chops and chilled drinks, with kitchens in Benin City and Abuja.
 
 **Developer:** JVeesoft-IT Solutions and Services Ltd (JVeesoft-IT)
-**Version:** 0.1.1 · Milestone 1 (Foundation), with the Sage mist background
+**Version:** 0.2.0 · Milestone 2 (Ordering)
 
 Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 
@@ -18,11 +18,27 @@ Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 | Location switch (Benin City or Abuja), remembered on the phone | Done |
 | "Closed for orders" banner and out-of-hours note | Done |
 | Database: tables, access rules, launch menu (`supabase/`) | Done |
-| Cart, size picker, checkout, order status | Milestone 2 |
+| Size and type picker, cart (kept on the phone), cart bar and badge | Done |
+| Checkout: delivery or pickup, details, date for veggie trays, totals | Done |
+| Orders saved with prices checked by the database (`place_order`) | Done |
+| Order status page that updates by itself every 15 seconds | Done |
+| Empty cart, closed-for-orders and order-failed screens, WhatsApp backup | Done |
 | Staff sign-in, orders board, products, settings | Milestone 3 |
 | New-order email, basket form, link previews | Milestone 4 |
 
-The **Add** and **Choose** buttons show a short "ordering opens in the next update" message until milestone 2.
+Until the staff orders board arrives in milestone 3, you can move a test order along by hand: in Supabase open **Table Editor > orders**, change `status` to `preparing`, `out_for_delivery` (or `ready` for pickup), then `completed`. The customer's status page follows within 15 seconds.
+
+---
+
+## Updating from milestone 1
+
+Your database already has the tables and menu. Add the ordering functions only:
+
+1. In Supabase, open **SQL Editor > New query**.
+2. Paste all of `supabase/ordering.sql` and click **Run**. Nothing is deleted; it only adds two functions.
+3. Extract the new zip over your project folder (replace files when asked), run `npm install`, then `npm run dev`.
+
+Don't run `schema.sql` or `seed.sql` again on a database you're using: `schema.sql` deletes all tables and starts over.
 
 ---
 
@@ -60,16 +76,17 @@ Stop the site with **Ctrl + C** in the terminal.
    - Set a strong database password and keep it somewhere safe.
 2. When the project is ready, open **SQL Editor > New query**.
 3. Open `supabase/schema.sql` in VS Code, copy all of it, paste it into the editor and click **Run**. You should see "Success. No rows returned".
-4. Do the same with `supabase/seed.sql`. This loads both locations and the full menu.
-5. Go to **Project Settings > API** (or the **Connect** button). Copy the **Project URL** and the **anon public** key.
-6. In VS Code, copy `.env.example` to a new file called `.env` and paste the two values in:
+4. Do the same with `supabase/ordering.sql`. This adds the functions that take and track orders.
+5. Do the same with `supabase/seed.sql`. This loads both locations and the full menu. Run it only once.
+6. Go to **Project Settings > API** (or the **Connect** button). Copy the **Project URL** and the **anon public** key.
+7. In VS Code, copy `.env.example` to a new file called `.env` and paste the two values in:
 
    ```
    VITE_SUPABASE_URL=https://abcd1234.supabase.co
    VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
    ```
 
-7. Stop the site (Ctrl + C) and run `npm run dev` again. The yellow bar disappears, and the menu now comes from your database.
+8. Stop the site (Ctrl + C) and run `npm run dev` again. The yellow bar disappears, and the menu now comes from your database.
 
 > Never put the **service_role** key in `.env` or anywhere in the website. It's only used later in Netlify's settings for the email function.
 
@@ -83,7 +100,7 @@ From the VS Code terminal, in the project folder:
 
 ```bash
 git add .
-git commit -m "Milestone 1: foundation"
+git commit -m "Milestone 2: ordering"
 git push
 ```
 
@@ -121,18 +138,21 @@ The free plan allows about 20 live publishes a month (each uses 15 of 300 credit
 ```
 src/
   main.tsx              page routes
-  pages/                Home, Menu, and placeholders for later milestones
-  components/           Layout (header, footer), ProductCard, LocationNotice, Icons
+  pages/                Home, Menu, Checkout, OrderStatus, and placeholders for later milestones
+  components/           Layout, ProductCard, OptionPicker, CartBar, QuantityStepper, LocationNotice, Icons
   lib/
     menu.tsx            loads locations, categories, products and prices
+    cart.tsx            the cart, saved on the phone
+    orders.ts           places orders and reads order status
     demo-data.ts        built-in copy of the menu used when .env is empty
     hours.ts            opening hours in Nigerian time
     money.ts            naira formatting
     supabase.ts         database connection
   styles/index.css      brand colours, type and buttons
 supabase/
-  schema.sql            tables and access rules
-  seed.sql              both locations and the launch menu
+  schema.sql            tables and access rules (fresh database only)
+  ordering.sql          place_order and order_status functions
+  seed.sql              both locations and the launch menu (run once)
 public/                 logo
 docs/                   requirements, design, tech stack
 netlify.toml            Netlify build and page routing
@@ -158,6 +178,8 @@ If you change prices in `seed.sql` before launch, change them in `src/lib/demo-d
 
 ## Troubleshooting
 
+- **"Could not find the function public.place_order" when placing an order:** run `supabase/ordering.sql` in the Supabase SQL Editor.
+- **Ordering says "This phone number has placed several orders in the last hour":** that's the abuse limit (5 orders an hour per number). When testing, use different numbers or wait an hour.
 - **`npm` is not recognised:** install Node.js 20+ from nodejs.org, then close and reopen VS Code.
 - **"Failed to fetch" right after adding `.env`:** check the URL is exactly `https://xxxx.supabase.co`. Pasting `https://` twice is an easy slip (`https://https://...`). Fix it, save, then stop and restart `npm run dev`.
 - **The red "menu could not load" bar:** check the internet connection and the two values in `.env`. If the Supabase project shows **Paused** (free projects pause after a week without use), click **Restore** in the Supabase dashboard.
