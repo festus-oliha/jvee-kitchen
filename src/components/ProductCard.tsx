@@ -28,7 +28,7 @@ export default function ProductCard({ product: p, soldOut, closed, onAdd }: Prop
   }
 
   return (
-    <article className={`flex gap-3.5 rounded-[18px] border-[1.5px] border-line p-3 ${soldOut ? "opacity-70" : ""}`}>
+    <article className={`flex gap-3.5 rounded-[18px] border-[1.5px] border-line bg-surface p-3 ${soldOut ? "opacity-70" : ""}`}>
       <div className={`flex h-24 w-24 flex-none items-center justify-center overflow-hidden rounded-[14px] ${CATEGORY_TILE[p.category_id] ?? "bg-mint"}`}>
         {p.photo_url ? <img src={p.photo_url} alt="" className="h-full w-full object-cover" loading="lazy" /> : <CategoryArt category={p.category_id} size={64} />}
       </div>

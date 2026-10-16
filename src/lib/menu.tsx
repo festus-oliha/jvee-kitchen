@@ -1,9 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { supabase } from "./supabase";
+import { configProblem, supabase } from "./supabase";
 import { demoMenu } from "./demo-data";
 import type { Location, Menu, Product } from "./types";
 
-type Source = "loading" | "live" | "demo" | "error";
+type Source = "loading" | "live" | "demo" | "error" | "config";
 
 interface MenuState {
   menu: Menu;
@@ -58,6 +58,11 @@ export function MenuProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    if (configProblem) {
+      setError(configProblem);
+      setSource("config");
+      return;
+    }
     setSource("loading");
     fetchMenu()
       .then((m) => { if (!cancelled) { setMenu(m); setSource(supabase ? "live" : "demo"); setError(null); } })

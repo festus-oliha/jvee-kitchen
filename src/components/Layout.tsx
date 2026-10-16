@@ -23,7 +23,7 @@ function Header() {
     `rounded-lg px-1 py-1 text-[15px] font-medium ${isActive ? "text-emerald" : "text-deep hover:text-emerald"}`;
 
   return (
-    <header className="sticky top-0 z-30 border-b border-mint bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-line bg-page/95 backdrop-blur">
       <div className="page-x flex h-16 items-center gap-4 sm:h-[76px] sm:gap-8">
         <Brand />
         <nav className="hidden gap-6 md:flex" aria-label="Main">
@@ -46,7 +46,7 @@ function Header() {
               <svg className="pointer-events-none absolute right-2.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
             </label>
           )}
-          <Link to="/checkout" aria-label="Cart" className="flex h-11 w-11 items-center justify-center rounded-btn border-[1.5px] border-line text-deep hover:bg-mint-light">
+          <Link to="/checkout" aria-label="Cart" className="flex h-11 w-11 items-center justify-center rounded-btn border-[1.5px] border-line bg-surface text-deep hover:bg-mint-light">
             <BagIcon />
           </Link>
         </div>
@@ -98,11 +98,23 @@ export function DemoNotice() {
         </p>
       </div>
     );
+  if (source === "config")
+    return (
+      <div className="bg-[#FCE4E2] text-[#7A1F17]">
+        <p className="page-x py-2 text-[13px]">
+          <strong>Database settings need fixing.</strong> {error} Then save <code>.env</code> and restart <code>npm run dev</code>.
+        </p>
+      </div>
+    );
   if (source === "error")
     return (
       <div className="bg-[#FCE4E2] text-[#7A1F17]">
         <div className="page-x flex flex-wrap items-center gap-3 py-2 text-[13px]">
-          <span><strong>The menu could not load.</strong> Check your internet connection. ({error})</span>
+          <span>
+            <strong>The menu could not load.</strong> Check your internet connection.
+            {import.meta.env.DEV && <> On this computer, also check the Supabase URL in <code>.env</code> and that Brave Shields or an ad blocker isn't blocking supabase.co.</>}
+            {" "}({error})
+          </span>
           <button onClick={retry} className="font-semibold underline">Try again</button>
         </div>
       </div>

@@ -3,7 +3,7 @@
 Ordering website for **JVee Crunch Kitchen**: homemade chin chin and cakes, fresh veggie trays, small chops and chilled drinks, with kitchens in Benin City and Abuja.
 
 **Developer:** JVeesoft-IT Solutions and Services Ltd (JVeesoft-IT)
-**Version:** 0.1.0 · Milestone 1 (Foundation)
+**Version:** 0.1.1 · Milestone 1 (Foundation), with the Sage mist background
 
 Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 
@@ -159,6 +159,7 @@ If you change prices in `seed.sql` before launch, change them in `src/lib/demo-d
 ## Troubleshooting
 
 - **`npm` is not recognised:** install Node.js 20+ from nodejs.org, then close and reopen VS Code.
+- **"Failed to fetch" right after adding `.env`:** check the URL is exactly `https://xxxx.supabase.co`. Pasting `https://` twice is an easy slip (`https://https://...`). Fix it, save, then stop and restart `npm run dev`.
 - **The red "menu could not load" bar:** check the internet connection and the two values in `.env`. If the Supabase project shows **Paused** (free projects pause after a week without use), click **Restore** in the Supabase dashboard.
 - **Port 5173 is already in use:** another copy is running. Close the other terminal, or run `npm run dev -- --port 5174`.
 

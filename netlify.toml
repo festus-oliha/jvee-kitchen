@@ -1,7 +1,7 @@
 [build]
   command = "npm run build"
   publish = "dist"
-  functions = "netlify/functions"
+  # functions = "netlify/functions"   # switched on in milestone 4 with the order-email function
 
 [build.environment]
   NODE_VERSION = "20"

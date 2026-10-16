@@ -14,9 +14,12 @@
   --color-emerald-dark: #087a4c;
   --color-zest: #a6e22e;
   --color-deep: #053b2a;
+  /* Page and card backgrounds: calm, natural tones instead of pure white */
+  --color-page: #eef2ea;
+  --color-surface: #f8faf5;
   --color-mint: #e6f7ee;
   --color-mint-light: #f3fbf6;
-  --color-line: #d5ede0;
+  --color-line: #d6e2d3;
   --color-muted: #4d7563;
   --color-alert: #c2362b;
   --color-amber: #b86a00;
@@ -41,7 +44,7 @@
     -webkit-text-size-adjust: 100%;
   }
   body {
-    @apply bg-white font-sans text-deep antialiased;
+    @apply bg-page font-sans text-deep antialiased;
   }
   :focus-visible {
     outline: 3px solid var(--color-zest);
@@ -60,7 +63,7 @@
     @apply inline-flex h-12 items-center justify-center gap-2 rounded-btn bg-emerald px-5 text-[15px] font-bold text-white transition-colors hover:bg-emerald-dark disabled:bg-[#e3ebe7] disabled:text-[#6e837a];
   }
   .btn-secondary {
-    @apply inline-flex h-12 items-center justify-center gap-2 rounded-btn border-[1.5px] border-deep bg-white px-5 text-[15px] font-semibold text-deep transition-colors hover:bg-mint-light;
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-btn border-[1.5px] border-deep bg-surface px-5 text-[15px] font-semibold text-deep transition-colors hover:bg-mint-light;
   }
   .label-caps {
     @apply text-xs font-semibold uppercase tracking-[1px] text-muted;

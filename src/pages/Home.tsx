@@ -71,7 +71,7 @@ export default function Home() {
                   type="button"
                   aria-pressed={selected}
                   onClick={() => setLocationId(l.id)}
-                  className={`flex flex-col gap-0.5 rounded-2xl px-3.5 py-3 text-left ${selected ? "border-2 border-emerald bg-mint" : "border-[1.5px] border-line bg-white hover:bg-mint-light"}`}
+                  className={`flex flex-col gap-0.5 rounded-2xl px-3.5 py-3 text-left ${selected ? "border-2 border-emerald bg-mint" : "border-[1.5px] border-line bg-surface hover:bg-mint-light"}`}
                 >
                   <span className="flex w-full items-center justify-between text-base font-bold">
                     {l.name}
@@ -92,7 +92,7 @@ export default function Home() {
           <h2 className="text-[26px] font-bold tracking-[-0.5px]">Popular this week</h2>
           <div className="grid grid-cols-3 gap-4">
             {popular.map((p) => (
-              <Link key={p.id} to={`/menu#${p.category_id}`} className="flex items-center gap-4 rounded-[20px] border-[1.5px] border-line p-[18px] hover:bg-mint-light">
+              <Link key={p.id} to={`/menu#${p.category_id}`} className="flex items-center gap-4 rounded-[20px] border-[1.5px] border-line bg-surface p-[18px] hover:bg-mint-light">
                 <div className={`flex h-[72px] w-[72px] flex-none items-center justify-center rounded-2xl ${CATEGORY_TILE[p.category_id]}`}>
                   <CategoryArt category={p.category_id} size={48} />
                 </div>

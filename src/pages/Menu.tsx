@@ -63,7 +63,7 @@ export default function Menu() {
         <LocationNotice />
       </div>
 
-      <nav aria-label="Menu sections" className="sticky top-16 z-20 -mx-4 mt-3 bg-white/95 px-4 py-2.5 backdrop-blur sm:top-[76px] sm:-mx-8 sm:px-8">
+      <nav aria-label="Menu sections" className="sticky top-16 z-20 -mx-4 mt-3 bg-page/95 px-4 py-2.5 backdrop-blur sm:top-[76px] sm:-mx-8 sm:px-8">
         <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
           {sections.map((s) => (
             <a
@@ -73,7 +73,7 @@ export default function Menu() {
               onClick={() => setActive(s.id)}
               aria-current={active === s.id ? "true" : undefined}
               className={`flex h-9 flex-none items-center rounded-full px-3.5 text-[13px] font-semibold ${
-                active === s.id ? "bg-deep text-white" : "border-[1.5px] border-line text-deep hover:bg-mint-light"
+                active === s.id ? "bg-deep text-white" : "border-[1.5px] border-line bg-surface text-deep hover:bg-mint-light"
               }`}
             >
               {s.name}
