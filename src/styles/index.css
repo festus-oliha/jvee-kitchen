@@ -1,0 +1,71 @@
+/* JVee Crunch Kitchen brand styles
+   Colours, type and spacing come from the design document (section 5). */
+@import "tailwindcss";
+@import "@fontsource/lexend/400.css";
+@import "@fontsource/lexend/500.css";
+@import "@fontsource/lexend/600.css";
+@import "@fontsource/lexend/700.css";
+@import "@fontsource/lexend/800.css";
+
+@theme {
+  --font-sans: "Lexend", "Trebuchet MS", system-ui, sans-serif;
+
+  --color-emerald: #0b8f5a;
+  --color-emerald-dark: #087a4c;
+  --color-zest: #a6e22e;
+  --color-deep: #053b2a;
+  --color-mint: #e6f7ee;
+  --color-mint-light: #f3fbf6;
+  --color-line: #d5ede0;
+  --color-muted: #4d7563;
+  --color-alert: #c2362b;
+  --color-amber: #b86a00;
+  --color-amber-soft: #fff1d6;
+  --color-amber-ink: #5c3800;
+
+  /* Category tile backgrounds */
+  --color-tile-chinchin: #fff1d6;
+  --color-tile-gift: #e6f7ee;
+  --color-tile-veggie: #eaf6d9;
+  --color-tile-chops: #fff1d6;
+  --color-tile-cake: #fce8ee;
+  --color-tile-drink: #e3f3f8;
+
+  --radius-card: 16px;
+  --radius-btn: 14px;
+  --container-page: 1120px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-white font-sans text-deep antialiased;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-zest);
+    outline-offset: 2px;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-btn bg-emerald px-5 text-[15px] font-bold text-white transition-colors hover:bg-emerald-dark disabled:bg-[#e3ebe7] disabled:text-[#6e837a];
+  }
+  .btn-secondary {
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-btn border-[1.5px] border-deep bg-white px-5 text-[15px] font-semibold text-deep transition-colors hover:bg-mint-light;
+  }
+  .label-caps {
+    @apply text-xs font-semibold uppercase tracking-[1px] text-muted;
+  }
+  .page-x {
+    @apply mx-auto w-full max-w-page px-4 sm:px-8;
+  }
+}
