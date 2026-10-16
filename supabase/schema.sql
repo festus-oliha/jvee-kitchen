@@ -3,7 +3,7 @@
 -- Developer: JVeesoft-IT Solutions and Services Ltd (JVeesoft-IT)
 --
 -- Run this whole file once in Supabase: SQL Editor > New query > Run.
--- Then run ordering.sql, then seed.sql. Safe to re-run: it drops and recreates the tables
+-- Then run ordering.sql, admin.sql, then seed.sql. Safe to re-run: it drops and recreates the tables
 -- (all data is lost), so only re-run before launch.
 --
 -- Milestone 1: tables, access rules, helper functions.
@@ -217,13 +217,11 @@ create policy "see own staff row" on public.staff for select
 create policy "founder edits staff" on public.staff for all
   using (public.is_founder()) with check (public.is_founder());
 
--- Orders: staff see and update their location's orders. Nobody inserts
--- directly; place_order() (milestone 2) does that with checked prices.
+-- Orders: staff see their location's orders. Nobody inserts or edits
+-- directly: place_order() (ordering.sql) adds them with checked prices, and
+-- next_status() / set_paid() (admin.sql) change them with checked steps.
 create policy "staff read orders" on public.orders for select
   using (public.can_see_location(location_id));
-create policy "staff update orders" on public.orders for update
-  using (public.can_see_location(location_id))
-  with check (public.can_see_location(location_id));
 create policy "founder deletes orders" on public.orders for delete
   using (public.is_founder());
 

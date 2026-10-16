@@ -3,7 +3,7 @@
 Ordering website for **JVee Crunch Kitchen**: homemade chin chin and cakes, fresh veggie trays, small chops and chilled drinks, with kitchens in Benin City and Abuja.
 
 **Developer:** JVeesoft-IT Solutions and Services Ltd (JVeesoft-IT)
-**Version:** 0.2.0 · Milestone 2 (Ordering)
+**Version:** 0.3.0 · Milestone 3 (Staff admin)
 
 Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 
@@ -23,22 +23,49 @@ Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 | Orders saved with prices checked by the database (`place_order`) | Done |
 | Order status page that updates by itself every 15 seconds | Done |
 | Empty cart, closed-for-orders and order-failed screens, WhatsApp backup | Done |
-| Staff sign-in, orders board, products, settings | Milestone 3 |
-| New-order email, basket form, link previews | Milestone 4 |
-
-Until the staff orders board arrives in milestone 3, you can move a test order along by hand: in Supabase open **Table Editor > orders**, change `status` to `preparing`, `out_for_delivery` (or `ready` for pickup), then `completed`. The customer's status page follows within 15 seconds.
+| Staff sign-in at `/admin` (founder and staff accounts) | Done |
+| Live orders board: New, Preparing, Ready / Out, Done today; chime and count in the browser tab | Done |
+| Order actions: next step, paid by cash or transfer, WhatsApp the customer, cancel with a reason | Done |
+| Products (founder): prices, sizes, sold out per location, hide, add, delete | Done |
+| Settings (founder): taking orders switch, delivery fee, cut-off, hours, phone, bank details, staff | Done |
+| New-order email, basket form, product photos, link previews | Milestone 4 |
 
 ---
 
-## Updating from milestone 1
+## Updating from milestone 2
 
-Your database already has the tables and menu. Add the ordering functions only:
+Your database already has the tables, menu and ordering functions. Add the admin functions only:
 
 1. In Supabase, open **SQL Editor > New query**.
-2. Paste all of `supabase/ordering.sql` and click **Run**. Nothing is deleted; it only adds two functions.
+2. Paste all of `supabase/admin.sql` and click **Run**. Nothing is deleted. (Coming from milestone 1? Run `ordering.sql` first, then `admin.sql`.)
 3. Extract the new zip over your project folder (replace files when asked), run `npm install`, then `npm run dev`.
+4. Create the founder's sign-in (next section).
 
 Don't run `schema.sql` or `seed.sql` again on a database you're using: `schema.sql` deletes all tables and starts over.
+
+---
+
+## Staff admin: first-time setup
+
+The admin is at **/admin** (for example `http://localhost:5173/admin`, and `https://jvee-kitchen.netlify.app/admin` once live).
+
+**1. Turn off public sign-ups** (only people you add can have accounts): in Supabase, **Authentication > Sign In / Providers > Email**, switch off **Allow new users to sign up**. Email sign-in itself stays on.
+
+**2. Create the founder's account:** **Authentication > Users > Add user > Create new user**. Enter her email and a strong password and tick **Auto Confirm User**.
+
+**3. Make that account the founder:** in **SQL Editor > New query**, run (with her real email):
+
+```sql
+select public.make_founder('owner@example.com', 'Ms. O. Osazemen');
+```
+
+It answers "Ms. O. Osazemen is now the founder and can sign in at /admin". She can now sign in and sees Orders, Products and Settings.
+
+**4. Add staff:** create each person's sign-in the same way (step 2), then the founder opens **Settings > Staff**, enters their email and name, picks Benin City, Abuja or both, and clicks **Give access**. Staff see the orders board only, and only for their location. **Remove** takes the access away at once.
+
+**Forgotten password:** in Supabase, **Authentication > Users**, open the person's menu (⋯) and choose **Send password recovery**, or delete the user and add them again.
+
+**On the orders board:** tap **Turn on sound** once on the phone or laptop that stays open at the counter; it chimes for each new order. New orders appear by themselves; if the live link drops, the board still checks every 30 seconds. Keep the screen on while the shop is open.
 
 ---
 
@@ -77,16 +104,17 @@ Stop the site with **Ctrl + C** in the terminal.
 2. When the project is ready, open **SQL Editor > New query**.
 3. Open `supabase/schema.sql` in VS Code, copy all of it, paste it into the editor and click **Run**. You should see "Success. No rows returned".
 4. Do the same with `supabase/ordering.sql`. This adds the functions that take and track orders.
-5. Do the same with `supabase/seed.sql`. This loads both locations and the full menu. Run it only once.
-6. Go to **Project Settings > API** (or the **Connect** button). Copy the **Project URL** and the **anon public** key.
-7. In VS Code, copy `.env.example` to a new file called `.env` and paste the two values in:
+5. Do the same with `supabase/admin.sql`. This adds the staff functions used by the admin.
+6. Do the same with `supabase/seed.sql`. This loads both locations and the full menu. Run it only once.
+7. Go to **Project Settings > API** (or the **Connect** button). Copy the **Project URL** and the **anon public** key.
+8. In VS Code, copy `.env.example` to a new file called `.env` and paste the two values in:
 
    ```
    VITE_SUPABASE_URL=https://abcd1234.supabase.co
    VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
    ```
 
-8. Stop the site (Ctrl + C) and run `npm run dev` again. The yellow bar disappears, and the menu now comes from your database.
+9. Stop the site (Ctrl + C) and run `npm run dev` again. The yellow bar disappears, and the menu now comes from your database.
 
 > Never put the **service_role** key in `.env` or anywhere in the website. It's only used later in Netlify's settings for the email function.
 
@@ -100,7 +128,7 @@ From the VS Code terminal, in the project folder:
 
 ```bash
 git add .
-git commit -m "Milestone 2: ordering"
+git commit -m "Milestone 3: staff admin"
 git push
 ```
 
@@ -139,11 +167,14 @@ The free plan allows about 20 live publishes a month (each uses 15 of 300 credit
 src/
   main.tsx              page routes
   pages/                Home, Menu, Checkout, OrderStatus, and placeholders for later milestones
+  pages/admin/          SignIn, AdminApp (frame and access check), Orders, Products, Settings
   components/           Layout, ProductCard, OptionPicker, CartBar, QuantityStepper, LocationNotice, Icons
   lib/
     menu.tsx            loads locations, categories, products and prices
     cart.tsx            the cart, saved on the phone
     orders.ts           places orders and reads order status
+    auth.tsx            staff sign-in and role
+    admin.ts            admin reads and saves (orders, products, locations, staff)
     demo-data.ts        built-in copy of the menu used when .env is empty
     hours.ts            opening hours in Nigerian time
     money.ts            naira formatting
@@ -152,6 +183,7 @@ src/
 supabase/
   schema.sql            tables and access rules (fresh database only)
   ordering.sql          place_order and order_status functions
+  admin.sql             next_status, set_paid and staff functions
   seed.sql              both locations and the launch menu (run once)
 public/                 logo
 docs/                   requirements, design, tech stack
@@ -162,7 +194,7 @@ netlify.toml            Netlify build and page routing
 
 ## Placeholders to replace before launch
 
-These values are made up. Change them in Supabase (**Table Editor > locations / products / product_options**), or from the admin Settings page once milestone 3 is in:
+These values are made up. Change them in Supabase (**Table Editor > locations / products / product_options**), or from the admin (**/admin > Products** and **Settings**):
 
 - Delivery fee: ₦1,500 Benin City, ₦2,500 Abuja
 - Same-day cut-off: 2:00pm
@@ -180,6 +212,10 @@ If you change prices in `seed.sql` before launch, change them in `src/lib/demo-d
 
 - **"Could not find the function public.place_order" when placing an order:** run `supabase/ordering.sql` in the Supabase SQL Editor.
 - **Ordering says "This phone number has placed several orders in the last hour":** that's the abuse limit (5 orders an hour per number). When testing, use different numbers or wait an hour.
+- **"Could not find the function public.next_status" on the orders board:** run `supabase/admin.sql` in the SQL Editor.
+- **Admin sign-in says the email and password don't match:** check the account exists in **Authentication > Users**. If it says "isn't confirmed", open the user and confirm them.
+- **"This account isn't on the staff list":** the sign-in works but hasn't been given access. The founder adds them in **Settings > Staff** (for the very first founder, run `make_founder` as above).
+- **Board shows "Checking every 30 seconds" instead of "Live":** that still works. For live updates, check **Database > Publications > supabase_realtime** includes the `orders` table.
 - **`npm` is not recognised:** install Node.js 20+ from nodejs.org, then close and reopen VS Code.
 - **"Failed to fetch" right after adding `.env`:** check the URL is exactly `https://xxxx.supabase.co`. Pasting `https://` twice is an easy slip (`https://https://...`). Fix it, save, then stop and restart `npm run dev`.
 - **The red "menu could not load" bar:** check the internet connection and the two values in `.env`. If the Supabase project shows **Paused** (free projects pause after a week without use), click **Restore** in the Supabase dashboard.
