@@ -3,7 +3,7 @@
 Ordering website for **JVee Crunch Kitchen**: homemade chin chin and cakes, fresh veggie trays, small chops and chilled drinks, with kitchens in Benin City and Abuja.
 
 **Developer:** JVeesoft-IT Solutions and Services Ltd (JVeesoft-IT)
-**Version:** 0.4.0 · Milestone 4 (Email alerts, custom baskets, photos, link previews)
+**Version:** 0.4.1 · Milestone 4 (Email alerts, custom baskets, photos, link previews)
 
 Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 
@@ -54,7 +54,7 @@ Every new order and basket enquiry sends one email to the owner, with the items,
 
 1. Sign up at [resend.com](https://resend.com) (free: 100 emails a day, 3,000 a month) **with the email address that should receive the alerts**.
 2. **API Keys > Create API key** (permission: Sending access). Copy it, it starts with `re_`.
-3. In Supabase, **Project Settings > API Keys**, copy the **service_role** key (secret; it never goes in `.env` or the code).
+3. In Supabase, **Project Settings > API Keys**, copy the **secret** key (`sb_secret_...`), or on older projects the legacy **service_role** key (`eyJ...`). Either works. It never goes in `.env` or the code.
 4. In Netlify, **Site configuration > Environment variables**, add:
 
    | Name | Value |
@@ -266,7 +266,7 @@ If you change prices in `seed.sql` before launch, change them in `src/lib/demo-d
 - **Admin sign-in says the email and password don't match:** check the account exists in **Authentication > Users**. If it says "isn't confirmed", open the user and confirm them.
 - **"This account isn't on the staff list":** the sign-in works but hasn't been given access. The founder adds them in **Settings > Staff** (for the very first founder, run `make_founder` as above).
 - **Board shows "Checking every 30 seconds" instead of "Live":** that still works. For live updates, check **Database > Publications > supabase_realtime** includes the `orders` table.
-- **No email after an order:** in Netlify open **Logs > Functions > notify**. "not set up" means a setting from the email section is missing; a Resend 403 means `ORDER_EMAIL_TO` isn't your own Resend address (until a domain is verified). Redeploy after changing settings.
+- **No email after an order:** first open `https://jvee-kitchen.netlify.app/.netlify/functions/notify` in your browser. It lists each email setting as "ok", "missing" or what looks wrong, and whether the database answers (it never shows the keys). Fix anything not "ok", redeploy, and place a new test order. For more detail, open **Logs > Functions > notify** in Netlify. "not set up" means a setting from the email section is missing; a Resend 403 means `ORDER_EMAIL_TO` isn't your own Resend address (until a domain is verified). Redeploy after changing settings.
 - **"Photo storage isn't set up yet" when adding a photo:** run `supabase/extras.sql`.
 - **"Could not find the function public.submit_enquiry" on the basket form:** run `supabase/extras.sql`.
 - **A link shared on WhatsApp shows an old preview:** WhatsApp keeps previews for a while. Add `?v=2` to the end of the link to see the new one.

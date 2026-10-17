@@ -1,7 +1,7 @@
 {
   "name": "jvee-crunch-kitchen",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.4.1",
   "type": "module",
   "description": "Ordering website for JVee Crunch Kitchen, Benin City and Abuja",
   "scripts": {
