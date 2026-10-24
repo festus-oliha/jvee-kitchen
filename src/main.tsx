@@ -11,6 +11,7 @@ import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import Basket from "./pages/Basket";
 import Track from "./pages/Track";
+import ProductPage from "./pages/Product";
 import NotFound from "./pages/NotFound";
 import Checkout from "./pages/Checkout";
 import OrderStatus from "./pages/OrderStatus";
@@ -21,6 +22,7 @@ const AdminOrders = lazy(() => import("./pages/admin/Orders"));
 const AdminProducts = lazy(() => import("./pages/admin/Products"));
 const AdminSettings = lazy(() => import("./pages/admin/Settings"));
 const AdminEnquiries = lazy(() => import("./pages/admin/Enquiries"));
+const AdminReviews = lazy(() => import("./pages/admin/Reviews"));
 const loading = <p style={{ padding: 40, textAlign: "center", color: "#4d7563" }}>Loading…</p>;
 
 const router = createBrowserRouter([
@@ -29,6 +31,7 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <Home /> },
       { path: "/menu", element: <Menu /> },
+      { path: "/menu/:slug", element: <ProductPage /> },
       { path: "/checkout", element: <Checkout /> },
       { path: "/order/:token", element: <OrderStatus /> },
       { path: "/basket", element: <Basket /> },
@@ -45,6 +48,7 @@ const router = createBrowserRouter([
       { path: "products", element: <AdminProducts /> },
       { path: "settings", element: <AdminSettings /> },
       { path: "enquiries", element: <AdminEnquiries /> },
+      { path: "reviews", element: <AdminReviews /> },
       { path: "*", element: <Navigate to="/admin" replace /> },
     ],
   },

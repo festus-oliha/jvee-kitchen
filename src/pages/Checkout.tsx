@@ -58,8 +58,8 @@ export default function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  const fee = fulfilment === "delivery" ? location?.delivery_fee ?? 0 : 0;
-  const total = cart.subtotal + fee;
+  // Delivery is priced by the rider for each trip and paid to the rider on arrival
+  const total = cart.subtotal;
   const needsDate = cart.noticeHours > 0;
   const minDate = lagosDate(Math.ceil(cart.noticeHours / 24));
   const slots = useMemo(() => (location && date ? slotsFor(location, date) : []), [location, date]);
@@ -192,10 +192,13 @@ export default function Checkout() {
               {(["delivery", "pickup"] as const).map((f) => (
                 <button key={f} type="button" aria-pressed={fulfilment === f} onClick={() => setFulfilment(f)}
                   className={`h-11 rounded-[11px] text-sm font-semibold ${fulfilment === f ? "bg-deep text-white" : "text-muted hover:text-deep"}`}>
-                  {f === "delivery" ? `Delivery${location ? ` · ${naira(location.delivery_fee)}` : ""}` : "Pickup · free"}
+                  {f === "delivery" ? "Delivery" : "Pickup · free"}
                 </button>
               ))}
             </div>
+            {fulfilment === "delivery" && (
+              <p className="mt-2 rounded-xl bg-amber-soft px-3 py-2 text-[13px] text-amber-ink">The delivery fee depends on distance. The rider tells you the price and you pay the rider when your order arrives.</p>
+            )}
             {fulfilment === "pickup" && location && (
               <p className="mt-2 text-[13px] text-muted">Collect from {location.address}.</p>
             )}
@@ -261,15 +264,9 @@ export default function Checkout() {
             <div className="flex justify-between"><span className="text-muted">Subtotal · {cart.count} item{cart.count === 1 ? "" : "s"}</span><span>{naira(cart.subtotal)}</span></div>
             <div className="flex justify-between">
               <span className="text-muted">{fulfilment === "delivery" ? `Delivery, ${location?.name ?? ""}` : "Pickup"}</span>
-              <span>{fee ? naira(fee) : "Free"}</span>
+              <span>{fulfilment === "delivery" ? "Paid to rider" : "Free"}</span>
             </div>
             <div className="mt-1 flex justify-between border-t-[1.5px] border-dashed border-line pt-2 text-lg font-bold"><span>Total</span><span>{naira(total)}</span></div>
-            {fulfilment === "delivery" && fee > 0 && (
-              <div className="mt-1 flex flex-col gap-1 rounded-xl bg-mint-light px-3 py-2 text-[13px]">
-                <div className="flex justify-between font-semibold"><span>Pay now by transfer</span><span>{naira(cart.subtotal)}</span></div>
-                <div className="flex justify-between text-muted"><span>Delivery fee, paid on arrival</span><span>{naira(fee)}</span></div>
-              </div>
-            )}
           </section>
 
           {error && (
@@ -281,8 +278,8 @@ export default function Checkout() {
               {submitting ? "Placing your order…" : `Place order · ${naira(total)}`}
             </button>
             <span className="text-center text-xs text-muted">
-              {fulfilment === "delivery" && fee
-                ? `Next you'll get our account details to pay ${naira(cart.subtotal)}. We start once it's paid; the ${naira(fee)} delivery fee is paid on arrival.`
+              {fulfilment === "delivery"
+                ? `Next you'll get our account details to pay ${naira(total)}. We start once it's paid. Delivery is paid to the rider on arrival.`
                 : `Next you'll get our account details to pay ${naira(total)}. We start once it's paid.`}
             </span>
           </div>

@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import type { Product } from "../lib/types";
 import { priceLabel } from "../lib/menu";
 import { CATEGORY_TILE, CategoryArt } from "./Icons";
+import { Stars } from "./Stars";
 import QuantityStepper from "./QuantityStepper";
 
 interface Props {
@@ -35,11 +36,16 @@ export default function ProductCard({ product: p, soldOut, closed, onAdd, inCart
 
   return (
     <article className={`flex gap-3.5 rounded-[18px] border-[1.5px] border-line bg-surface p-3 ${soldOut ? "opacity-70" : ""}`}>
-      <div className={`flex h-24 w-24 flex-none items-center justify-center overflow-hidden rounded-[14px] ${CATEGORY_TILE[p.category_id] ?? "bg-mint"}`}>
+      <Link to={`/menu/${p.slug}`} tabIndex={-1} aria-hidden="true" className={`flex h-24 w-24 flex-none items-center justify-center overflow-hidden rounded-[14px] ${CATEGORY_TILE[p.category_id] ?? "bg-mint"}`}>
         {p.photo_url ? <img src={p.photo_url} alt="" className="h-full w-full object-cover" loading="lazy" /> : <CategoryArt category={p.category_id} size={64} />}
-      </div>
+      </Link>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <h3 className="text-base font-bold leading-snug">{p.name}</h3>
+        <h3 className="text-base font-bold leading-snug"><Link to={`/menu/${p.slug}`} className="hover:text-emerald-dark hover:underline">{p.name}</Link></h3>
+        {p.rating && (
+          <Link to={`/menu/${p.slug}#reviews`} className="flex w-fit items-center gap-1 text-xs font-semibold text-muted">
+            <Stars value={p.rating.average} size={13} /> {p.rating.average.toFixed(1)} ({p.rating.count})
+          </Link>
+        )}
         {hasChoices && inCart > 0 && (
           <span className="self-start rounded-md bg-mint px-2 py-0.5 text-[11px] font-bold text-emerald-dark">{inCart} in your cart</span>
         )}

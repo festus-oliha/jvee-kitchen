@@ -33,6 +33,11 @@ async function fetchMenu(): Promise<Menu> {
   const failed = [locs, cats, prods, avail].find((r) => r.error);
   if (failed?.error) throw new Error(failed.error.message);
 
+  // Star ratings; the menu still works if reviews aren't set up yet
+  const ratings = new Map<string, { average: number; count: number }>();
+  const rated = await supabase.from("product_ratings").select("product_id, average, count");
+  for (const r of rated.data ?? []) ratings.set(r.product_id, { average: Number(r.average), count: r.count });
+
   const soldOut = new Map<string, string[]>();
   for (const a of avail.data ?? []) soldOut.set(a.product_id, [...(soldOut.get(a.product_id) ?? []), a.location_id]);
 
@@ -42,6 +47,7 @@ async function fetchMenu(): Promise<Menu> {
       ...rest,
       options: (product_options ?? []).filter((o) => o.active).sort((a, b) => a.sort_order - b.sort_order),
       sold_out_at: soldOut.get(p.id) ?? [],
+      rating: ratings.get(p.id),
     };
   });
   return { locations: locs.data ?? [], categories: cats.data ?? [], products };

@@ -309,3 +309,40 @@ export async function removeProductPhoto(productId: string): Promise<void> {
   const { error } = await db().from("products").update({ photo_url: null }).eq("id", productId);
   fail(error);
 }
+
+// ---------------------------------------------------------------------------
+// Reviews (founder moderates)
+// ---------------------------------------------------------------------------
+
+export interface AdminReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  name: string;
+  hidden: boolean;
+  created_at: string;
+  products: { name: string; slug: string } | null;
+  orders: { code: string; customer_name: string; phone: string } | null;
+}
+
+export async function fetchAllReviews(): Promise<AdminReview[]> {
+  const { data, error } = await db()
+    .from("reviews")
+    .select("id, rating, comment, name, hidden, created_at, products(name, slug), orders(code, customer_name, phone)")
+    .order("created_at", { ascending: false })
+    .limit(300);
+  fail(error);
+  return (data ?? []) as unknown as AdminReview[];
+}
+
+export async function setReviewHidden(id: string, hidden: boolean): Promise<void> {
+  const { error, count } = await db().from("reviews").update({ hidden }, { count: "exact" }).eq("id", id);
+  fail(error);
+  if (count === 0) throw new Error("Nothing was saved. Only the founder can hide reviews.");
+}
+
+export async function deleteReview(id: string): Promise<void> {
+  const { error, count } = await db().from("reviews").delete({ count: "exact" }).eq("id", id);
+  fail(error);
+  if (count === 0) throw new Error("Nothing was deleted. Only the founder can delete reviews.");
+}

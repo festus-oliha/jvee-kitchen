@@ -3,7 +3,7 @@
 Ordering website for **JVee Crunch Kitchen**: homemade chin chin and cakes, fresh veggie trays, small chops and chilled drinks, with kitchens in Benin City and Abuja.
 
 **Developer:** JVeesoft-IT Solutions and Services Ltd (JVeesoft-IT)
-**Version:** 0.5.0 · Milestone 4 (Email alerts, custom baskets, photos, link previews)
+**Version:** 0.6.0 · Milestone 4 (Email alerts, custom baskets, photos, link previews)
 
 Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 
@@ -35,13 +35,26 @@ Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 | Link previews for WhatsApp, Facebook, LinkedIn and X; phone home-screen icon | Done |
 | Speed and accessibility checks (Lighthouse on phone: 98–99 speed, 95–100 accessibility, 100 SEO) | Done |
 | Order tracking: **Track order** page (order code + phone number), "Save this link to WhatsApp" on the order page, tracking link in the staff WhatsApp messages | Done (0.5.0) |
+| Delivery fee set by the rider and paid by the customer on arrival (no fixed fee on the website) | Done (0.6.0) |
+| Product pages (`/menu/<item>`): big photo, description, prices, reviews, "Share with a friend" | Done (0.6.0) |
+| Customer reviews from completed orders, stars on the menu, **Admin > Reviews** to hide or delete | Done (0.6.0) |
 | Final testing with the owner's real details, then launch | Milestone 5 |
+
+**Delivery:** the website total is just the items. Customers see "The rider tells you the price and you pay the rider when your order arrives", and staff see the same note on each delivery order.
+
+**Reviews:** when an order is marked completed, the customer's order page asks "How was it?" for each item. Reviews show on the product page with "Verified order" and the average shows as stars on the menu. Only customers with a completed order can review, once per item per order (sending again updates it). The founder can hide a review that isn't genuine (and show it again) or delete it in **Admin > Reviews**. Tip: on a completed order, the WhatsApp button now asks the customer for a review.
+
+**Descriptions and photos:** in **Admin > Products > Edit**, the Description box (up to 400 characters) is shown on the menu card and in full on the product page. Add photos with **Add a photo** in the same editor.
 
 **How customers track an order:** the order page updates by itself. To find it again later they can use the **Track order** page (header, footer and home page) with their order code and phone number; both must match, so nobody can look up another person's order. Orders placed or found on a phone are also listed there. Staff WhatsApp messages from the board include the customer's tracking link.
 
 **How payment works:** after placing an order the customer sees the account details and the amount to pay now (the items; for delivery, the delivery fee is paid on arrival). They can send the receipt on WhatsApp. Staff check the bank app for the order code, tap **Transfer received**, and only then can they tap **Start preparing**. The database enforces this, so an unpaid order can't be started by mistake. Unpaid orders can be cancelled with the reason "No payment received".
 
 ---
+
+## Updating to 0.6.0 (rider delivery fee, product pages, reviews)
+
+In the Supabase SQL Editor run, in this order: `supabase/ordering.sql` (removes the fixed delivery fee from new orders), then `supabase/extras.sql` (adds reviews, clears the old placeholder fees, sets the veggie tray photo). Both are safe to run again. Then extract the zip over your project, `npm install`, commit and push.
 
 ## Updating to 0.5.0 (order tracking)
 
@@ -221,6 +234,7 @@ src/
   pages/                Home, Menu, Checkout, OrderStatus, and placeholders for later milestones
   pages/Basket.tsx      custom basket enquiry form
   pages/Track.tsx       find an order by code and phone number
+  pages/Product.tsx     one product: photo, description, reviews, share
   pages/admin/          SignIn, AdminApp (frame and access check), Orders, Enquiries, Products, Settings
   components/           Layout, ProductCard, OptionPicker, CartBar, QuantityStepper, LocationNotice, Icons
   lib/
@@ -238,11 +252,11 @@ supabase/
   schema.sql            tables and access rules (fresh database only)
   ordering.sql          place_order and order_status functions
   admin.sql             next_status, set_paid and staff functions
-  extras.sql            basket enquiries, email tracking, product photo storage, find_order
+  extras.sql            basket enquiries, email tracking, photo storage, find_order, reviews
 netlify/functions/
   notify.mts            emails the owner about new orders and basket enquiries
   seed.sql              both locations and the launch menu (run once)
-public/                 logo, app icons, og-image.png (link preview picture), robots.txt
+public/                 logo, app icons, og-image.png (link preview picture), robots.txt, photos/
 docs/                   requirements, design, tech stack
 netlify.toml            Netlify build and page routing
 ```
@@ -253,7 +267,6 @@ netlify.toml            Netlify build and page routing
 
 These values are made up. Change them in Supabase (**Table Editor > locations / products / product_options**), or from the admin (**/admin > Products** and **Settings**):
 
-- Delivery fee: ₦1,500 Benin City, ₦2,500 Abuja
 - Same-day cut-off: 2:00pm
 - Bank details: "JVee Crunch Kitchen · 0123456789 · Sample Bank"
 - Drinks: sports drink ₦1,000, bottled water ₦300

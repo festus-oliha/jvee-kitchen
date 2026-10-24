@@ -231,8 +231,9 @@ function ProductEditor({ product, cat, twoAxis, busy, onSave }: {
             {cat.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </label>
-        <label className="flex flex-col gap-1.5 text-sm font-semibold sm:col-span-2">Description
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={300} rows={2}
+        <label className="flex flex-col gap-1.5 text-sm font-semibold sm:col-span-2">
+          <span className="flex justify-between gap-2">Description <span className="font-normal text-muted">Shown on the menu and the product page · {description.length}/400</span></span>
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={400} rows={3} placeholder="A little about it: what's inside, size, how many it serves, why people love it."
             className="rounded-lg border-[1.5px] border-line bg-surface px-3 py-2 text-[15px] outline-none focus:border-emerald" />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-semibold">Order ahead (hours, 0 = same day)

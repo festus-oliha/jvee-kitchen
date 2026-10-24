@@ -10,10 +10,10 @@ const hours: Location["opening_hours"] = {
 
 const locations: Location[] = [
   { id: "benin-city", name: "Benin City", address: "2 Asemota Street, Ekehuan Road, Benin City", phone: "0805 892 3302",
-    taking_orders: true, delivery_fee: 1500, same_day_cutoff: "14:00:00", opening_hours: hours,
+    taking_orders: true, delivery_fee: 0, same_day_cutoff: "14:00:00", opening_hours: hours,
     bank_details: "JVee Crunch Kitchen · 0123456789 · Sample Bank", sort_order: 1 },
   { id: "abuja", name: "Abuja", address: "99N Success Street, FHA, Lugbe, Abuja", phone: "0805 892 3302",
-    taking_orders: true, delivery_fee: 2500, same_day_cutoff: "14:00:00", opening_hours: hours,
+    taking_orders: true, delivery_fee: 0, same_day_cutoff: "14:00:00", opening_hours: hours,
     bank_details: "JVee Crunch Kitchen · 0123456789 · Sample Bank", sort_order: 2 },
 ];
 
@@ -56,7 +56,7 @@ const products: Product[] = [
     "Birthdays, weddings and thank-yous. Tell us your budget and we build the basket around it.", 3, [], { enquiry_only: true }),
   product("mixed-veggie-tray", "veggie-trays", "Mixed veggie tray",
     "Freshly made with cabbage, carrots, cucumber, sweet corn and lettuce.", 4,
-    [opt("mixed-veggie-tray", "Without eggs", 5000), opt("mixed-veggie-tray", "With eggs", 7000)], { notice_hours: 24 }),
+    [opt("mixed-veggie-tray", "Without eggs", 5000), opt("mixed-veggie-tray", "With eggs", 7000)], { notice_hours: 24, photo_url: "/photos/veggie-tray-party.webp" }),
   product("quick-solo-samosa", "small-chops", "Quick Solo samosa pack", "Samosas, ready to share.", 5,
     [opt("quick-solo-samosa", "Samosa pack", 3000)]),
   product("quick-solo", "small-chops", "Quick Solo", "Samosa, puff-puff and peppered chicken.", 6,

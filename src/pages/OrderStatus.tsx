@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router";
 import { fetchOrder, payNow, trackingUrl, whatsappLink, type OrderStatus as Status, type TrackedOrder } from "../lib/orders";
 import { naira } from "../lib/money";
 import { ChatIcon } from "../components/Icons";
+import RateOrder from "../components/RateOrder";
 
 const POLL_MS = 15_000;
 
@@ -105,7 +106,7 @@ export default function OrderStatus() {
               ? <path d="M8 8l8 8M16 8l-8 8" stroke="#C2362B" strokeWidth="2.4" strokeLinecap="round" />
               : <path d="M7 12.5l3 3 7-7" stroke="#053B2A" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />}
           </svg>
-          <h1 className="mt-1 text-[28px] font-extrabold tracking-[-1px] sm:text-[36px]">{cancelled ? "Order cancelled" : "Order placed"}</h1>
+          <h1 className="mt-1 text-[28px] font-extrabold tracking-[-1px] sm:text-[36px]">{cancelled ? "Order cancelled" : o.status === "completed" ? "Order completed" : "Order placed"}</h1>
           <p className="text-sm text-mint">Thank you, {o.customer_name}. Your order code is</p>
           <div className="rounded-xl bg-deep px-3.5 py-1.5 text-[30px] font-extrabold tracking-[2px]">{o.code}</div>
           <p className="text-xs text-mint">Placed {dateTime(o.created_at)} · {o.location.name}</p>
@@ -161,6 +162,8 @@ export default function OrderStatus() {
             </section>
           )}
 
+          {o.status === "completed" && <RateOrder token={token} firstName={o.customer_name.split(" ")[0]} />}
+
           {o.needed_for && (
             <p className="rounded-xl bg-amber-soft px-4 py-3 text-sm text-amber-ink">Needed for <strong>{dateTime(o.needed_for)}</strong></p>
           )}
@@ -175,7 +178,7 @@ export default function OrderStatus() {
             ))}
             <div className="mt-1 flex justify-between border-t border-line pt-2 text-muted">
               <span>{o.fulfilment === "delivery" ? "Delivery" : "Pickup"}</span>
-              <span>{o.delivery_fee ? naira(o.delivery_fee) : "Free"}</span>
+              <span>{o.delivery_fee ? naira(o.delivery_fee) : o.fulfilment === "delivery" ? "Paid to rider" : "Free"}</span>
             </div>
             <div className="flex justify-between text-base font-bold"><span>Total</span><span>{naira(o.total)}</span></div>
             <p className="mt-1 text-[13px] text-muted">
@@ -206,8 +209,8 @@ export default function OrderStatus() {
               ) : (
                 <p className="rounded-xl bg-amber-soft px-3 py-2.5 text-[13px] text-amber-ink">Call or WhatsApp {o.location.phone} for the account details.</p>
               )}
-              {o.fulfilment === "delivery" && o.delivery_fee > 0 && (
-                <p className="text-[13px] text-muted">The {naira(o.delivery_fee)} delivery fee is paid on arrival, in cash or by transfer.</p>
+              {o.fulfilment === "delivery" && (
+                <p className="text-[13px] text-muted">{o.delivery_fee > 0 ? `The ${naira(o.delivery_fee)} delivery fee is paid on arrival.` : "The delivery fee is set by the rider and paid to the rider when your order arrives."}</p>
               )}
               <a href={whatsappLink(proofText)} target="_blank" rel="noreferrer" className="btn-primary h-12 rounded-xl text-[15px]">
                 <ChatIcon /> I've paid: send the receipt
@@ -217,8 +220,8 @@ export default function OrderStatus() {
           {!cancelled && o.paid && (
             <section className="flex flex-col gap-1 rounded-2xl bg-mint p-4">
               <h2 className="text-[15px] font-bold">Payment received, thank you</h2>
-              {o.fulfilment === "delivery" && o.delivery_fee > 0 && o.status !== "completed" && (
-                <p className="text-[13px] text-muted">Please have the {naira(o.delivery_fee)} delivery fee ready when it arrives.</p>
+              {o.fulfilment === "delivery" && o.status !== "completed" && (
+                <p className="text-[13px] text-muted">The rider will tell you the delivery fee. Please pay the rider when your order arrives.</p>
               )}
             </section>
           )}

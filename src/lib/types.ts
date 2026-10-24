@@ -43,6 +43,7 @@ export interface Product {
   sort_order: number;
   options: ProductOption[];
   sold_out_at: string[]; // location ids where this product is sold out
+  rating?: { average: number; count: number }; // from visible customer reviews
 }
 
 export interface Menu {

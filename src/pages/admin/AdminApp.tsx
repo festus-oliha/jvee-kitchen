@@ -62,6 +62,7 @@ function Gate() {
             <NavLink to="/admin" end className={tab}>Orders</NavLink>
             <NavLink to="/admin/enquiries" className={tab}>Baskets</NavLink>
             {isFounder && <NavLink to="/admin/products" className={tab}>Products</NavLink>}
+            {isFounder && <NavLink to="/admin/reviews" className={tab}>Reviews</NavLink>}
             {isFounder && <NavLink to="/admin/settings" className={tab}>Settings</NavLink>}
           </nav>
           <div className="ml-auto flex items-center gap-2">

@@ -274,7 +274,9 @@ function OrderCard({ order: o, now, showLocation, locationName, onChanged }: {
     ? `Hello ${o.customer_name.split(" ")[0]}, this is JVee Crunch Kitchen about your order ${o.code}. Please pay ${naira(due)} by transfer with ${o.code} as the reference, and we'll start right away. Account details and live status: ${track}`
     : o.paid && o.status === "received"
       ? `Hello ${o.customer_name.split(" ")[0]}, we've received your payment for order ${o.code}. Thank you! Follow your order here: ${track}`
-      : `Hello ${o.customer_name.split(" ")[0]}, this is JVee Crunch Kitchen about your order ${o.code}. Track it here: ${track}`;
+      : o.status === "completed"
+        ? `Hello ${o.customer_name.split(" ")[0]}, thank you for ordering from JVee Crunch Kitchen! We'd love to hear what you thought. Please leave a quick review here: ${track}`
+        : `Hello ${o.customer_name.split(" ")[0]}, this is JVee Crunch Kitchen about your order ${o.code}. Track it here: ${track}`;
   const wa = `https://wa.me/${internationalPhone(o.phone)}?text=${encodeURIComponent(waText)}`;
   const neededSoon = o.needed_for && new Date(o.needed_for).getTime() - now < 3 * 3600_000;
 
@@ -340,8 +342,10 @@ function OrderCard({ order: o, now, showLocation, locationName, onChanged }: {
             </div>
           </>
         ) : <span className="text-muted">Not paid</span>}
-        {o.fulfilment === "delivery" && o.delivery_fee > 0 && o.status !== "cancelled" && (
-          <span className={o.status === "out_for_delivery" ? "font-bold text-deep" : "text-muted"}>Collect {naira(o.delivery_fee)} delivery fee on arrival</span>
+        {o.fulfilment === "delivery" && o.status !== "cancelled" && (
+          <span className={o.status === "out_for_delivery" ? "font-bold text-deep" : "text-muted"}>
+            {o.delivery_fee > 0 ? `Collect ${naira(o.delivery_fee)} delivery fee on arrival` : "Delivery fee: set by the rider, paid by the customer on arrival"}
+          </span>
         )}
       </div>
 

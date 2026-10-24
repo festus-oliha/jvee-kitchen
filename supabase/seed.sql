@@ -10,13 +10,13 @@
 -- Locations ------------------------------------------------------------
 insert into public.locations (id, name, address, phone, taking_orders, delivery_fee, same_day_cutoff, opening_hours, bank_details, sort_order) values
 ('benin-city', 'Benin City', '2 Asemota Street, Ekehuan Road, Benin City', '0805 892 3302', true,
-  1500,                                                         -- PLACEHOLDER delivery fee
+  0,                                                            -- delivery is priced by the rider, paid on arrival
   '14:00',                                                      -- PLACEHOLDER cut-off
   '{"mon":["08:00","18:00"],"tue":["08:00","18:00"],"wed":["08:00","18:00"],"thu":["08:00","18:00"],"fri":["08:00","18:00"],"sat":["08:00","18:00"],"sun":null}',
   'JVee Crunch Kitchen · 0123456789 · Sample Bank',             -- PLACEHOLDER bank details
   1),
 ('abuja', 'Abuja', '99N Success Street, FHA, Lugbe, Abuja', '0805 892 3302', true,
-  2500,                                                         -- PLACEHOLDER delivery fee
+  0,                                                            -- delivery is priced by the rider, paid on arrival
   '14:00',                                                      -- PLACEHOLDER cut-off
   '{"mon":["08:00","18:00"],"tue":["08:00","18:00"],"wed":["08:00","18:00"],"thu":["08:00","18:00"],"fri":["08:00","18:00"],"sat":["08:00","18:00"],"sun":null}',
   'JVee Crunch Kitchen · 0123456789 · Sample Bank',             -- PLACEHOLDER bank details
@@ -71,3 +71,6 @@ join (values
   ('sports-drink',         '50cl',                 '50cl',   1000, 1),   -- PLACEHOLDER price
   ('bottled-water',        '75cl',                 '75cl',    300, 1)    -- PLACEHOLDER price
 ) as v(slug, label, size, price, sort_order) on v.slug = p.slug;
+
+-- First real product photo, shipped with the website in public/photos (v0.6.0)
+update public.products set photo_url = '/photos/veggie-tray-party.webp' where slug = 'mixed-veggie-tray';

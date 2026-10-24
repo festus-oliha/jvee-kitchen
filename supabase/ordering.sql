@@ -158,9 +158,9 @@ begin
     end;
   end if;
 
-  if v_fulfilment = 'delivery' then
-    v_fee := loc.delivery_fee;
-  end if;
+  -- Delivery fee: set by the rider for each trip and paid to the rider on
+  -- arrival, so it is not part of the website total (v0.6.0).
+  v_fee := 0;
 
   -- Save
   v_code := public.new_order_code();

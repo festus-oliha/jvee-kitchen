@@ -28,7 +28,7 @@ export default function Settings() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-[26px] font-extrabold tracking-[-0.5px]">Settings</h1>
-        <p className="mt-0.5 text-sm text-muted">Each kitchen has its own switch, fees, hours and bank details.</p>
+        <p className="mt-0.5 text-sm text-muted">Each kitchen has its own switch, hours and bank details.</p>
       </div>
       {error && <p role="alert" className="rounded-xl bg-[#FCE4E2] px-4 py-3 font-semibold text-[#7A1F17]">{error} <button type="button" className="underline" onClick={load}>Try again</button></p>}
       {!locations && !error && <p className="py-10 text-center text-muted">Loading settings…</p>}
@@ -49,7 +49,6 @@ const DAYS: { key: DayKey; name: string }[] = [
 
 function LocationCard({ loc, onSaved }: { loc: Location; onSaved: (m: string) => Promise<void> }) {
   const [phone, setPhone] = useState(loc.phone);
-  const [fee, setFee] = useState(String(loc.delivery_fee));
   const [cutoff, setCutoff] = useState(loc.same_day_cutoff.slice(0, 5));
   const [bank, setBank] = useState(loc.bank_details ?? "");
   const [hours, setHours] = useState(loc.opening_hours);
@@ -65,14 +64,12 @@ function LocationCard({ loc, onSaved }: { loc: Location; onSaved: (m: string) =>
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    const deliveryFee = Number(fee.replace(/[,\s₦]/g, ""));
-    if (!Number.isInteger(deliveryFee) || deliveryFee < 0) return setError("Enter the delivery fee in whole naira, for example 1500.");
     if (phone.replace(/\D/g, "").length < 10) return setError("Enter a phone number customers can call.");
     for (const d of DAYS) {
       const h = hours[d.key];
       if (h && h[0] >= h[1]) return setError(`${d.name}: closing time must be after opening time.`);
     }
-    run(() => updateLocation(loc.id, { phone: phone.trim(), delivery_fee: deliveryFee, same_day_cutoff: cutoff, bank_details: bank.trim() || null, opening_hours: hours }), `${loc.name} settings saved`);
+    run(() => updateLocation(loc.id, { phone: phone.trim(), same_day_cutoff: cutoff, bank_details: bank.trim() || null, opening_hours: hours }), `${loc.name} settings saved`);
   }
 
   return (
@@ -95,10 +92,7 @@ function LocationCard({ loc, onSaved }: { loc: Location; onSaved: (m: string) =>
       </div>
 
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <label className="flex flex-col gap-1.5 text-sm font-semibold">Delivery fee (₦)
-            <input inputMode="numeric" value={fee} onChange={(e) => setFee(e.target.value)} className={field} />
-          </label>
+        <div className="grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 text-sm font-semibold">Same-day cut-off
             <input type="time" value={cutoff} onChange={(e) => setCutoff(e.target.value)} className={field} />
           </label>
@@ -106,6 +100,7 @@ function LocationCard({ loc, onSaved }: { loc: Location; onSaved: (m: string) =>
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={field} />
           </label>
         </div>
+        <p className="rounded-lg bg-mint-light px-3 py-2 text-[13px] text-muted">Delivery fee: set by the rider for each trip and paid by the customer on arrival, so it isn't charged on the website.</p>
         <label className="flex flex-col gap-1.5 text-sm font-semibold">Bank details shown to customers
           <textarea value={bank} onChange={(e) => setBank(e.target.value)} rows={2} maxLength={200} placeholder="Account name · number · bank"
             className="rounded-lg border-[1.5px] border-line bg-surface px-3 py-2 text-[15px] outline-none focus:border-emerald" />

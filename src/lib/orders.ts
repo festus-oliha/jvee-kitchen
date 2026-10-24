@@ -96,11 +96,12 @@ export function whatsappLink(message: string): string {
 
 /**
  * Payment rule: the customer pays for the items by bank transfer straight after
- * ordering, and the kitchen starts once that payment is confirmed. A delivery fee
- * is paid to the rider on arrival.
+ * ordering, and the kitchen starts once that payment is confirmed. Delivery is
+ * priced by the rider and paid to the rider on arrival.
  */
 export function payNow(o: { fulfilment: "delivery" | "pickup"; subtotal: number; total: number }): number {
-  return o.fulfilment === "delivery" ? o.subtotal : o.total;
+  // Delivery is never paid upfront: older orders kept a fee in the total, newer ones have none
+  return o.subtotal;
 }
 
 export interface NewEnquiry {

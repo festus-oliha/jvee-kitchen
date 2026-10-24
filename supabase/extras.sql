@@ -122,3 +122,112 @@ $$;
 
 revoke all on function public.find_order(text, text) from public;
 grant execute on function public.find_order(text, text) to anon, authenticated;
+
+-- =====================================================================
+-- v0.6.0
+-- =====================================================================
+
+-- Delivery is now priced by the rider and paid to the rider on arrival.
+-- (ordering.sql no longer adds a fee; this clears the old placeholder fees.)
+update public.locations set delivery_fee = 0 where delivery_fee <> 0;
+
+-- First real product photo, shipped with the website (/photos/...).
+-- Only fills it in if no photo has been uploaded yet.
+update public.products set photo_url = '/photos/veggie-tray-party.webp'
+ where slug = 'mixed-veggie-tray' and photo_url is null;
+
+-- ---------------------------------------------------------------------
+-- Customer reviews. Only someone holding a completed order's tracking
+-- link can review the products in that order (one review per product per
+-- order; sending again updates it). Everyone can read reviews that are not
+-- hidden; the founder can hide or delete any review.
+-- ---------------------------------------------------------------------
+create table if not exists public.reviews (
+  id          uuid primary key default gen_random_uuid(),
+  product_id  uuid not null references public.products(id) on delete cascade,
+  order_id    uuid not null references public.orders(id) on delete cascade,
+  rating      integer not null check (rating between 1 and 5),
+  comment     text check (length(comment) <= 600),
+  name        text not null,
+  hidden      boolean not null default false,
+  created_at  timestamptz not null default now(),
+  unique (order_id, product_id)
+);
+create index if not exists reviews_product_idx on public.reviews (product_id, created_at desc);
+alter table public.reviews enable row level security;
+
+drop policy if exists "read visible reviews" on public.reviews;
+drop policy if exists "founder moderates reviews" on public.reviews;
+drop policy if exists "founder deletes reviews" on public.reviews;
+create policy "read visible reviews" on public.reviews for select
+  using (not hidden or public.is_staff());
+create policy "founder moderates reviews" on public.reviews for update
+  using (public.is_founder()) with check (public.is_founder());
+create policy "founder deletes reviews" on public.reviews for delete
+  using (public.is_founder());
+
+-- Average rating and count per product (visible reviews only)
+create or replace view public.product_ratings with (security_invoker = true) as
+  select product_id, round(avg(rating)::numeric, 1) as average, count(*)::int as count
+    from public.reviews
+   where not hidden
+   group by product_id;
+grant select on public.product_ratings to anon, authenticated;
+grant select on public.reviews to anon, authenticated;
+
+-- What the customer can review on their order page
+create or replace function public.review_targets(p_token uuid)
+returns jsonb
+language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(t order by t->>'name'), '[]'::jsonb)
+    from (
+      select distinct on (p.id) jsonb_build_object(
+               'product_id', p.id, 'slug', p.slug, 'name', p.name, 'photo_url', p.photo_url, 'category_id', p.category_id,
+               'review', (select jsonb_build_object('rating', r.rating, 'comment', r.comment, 'name', r.name, 'hidden', r.hidden)
+                            from public.reviews r where r.order_id = o.id and r.product_id = p.id)) as t
+        from public.orders o
+        join public.order_items i on i.order_id = o.id
+        join public.product_options po on po.id = i.product_option_id
+        join public.products p on p.id = po.product_id
+       where o.tracking_token = p_token and o.status = 'completed'
+       order by p.id
+    ) x;
+$$;
+
+create or replace function public.submit_review(p_token uuid, p_product_id uuid, p_rating integer, p_comment text, p_name text)
+returns void
+language plpgsql volatile security definer set search_path = public as $$
+declare
+  o public.orders;
+  v_name text;
+begin
+  select * into o from public.orders where tracking_token = p_token;
+  if not found then
+    raise exception 'We couldn''t find that order.';
+  end if;
+  if o.status <> 'completed' then
+    raise exception 'You can review your order once it has been delivered or collected.';
+  end if;
+  if not exists (select 1 from public.order_items i join public.product_options po on po.id = i.product_option_id
+                  where i.order_id = o.id and po.product_id = p_product_id) then
+    raise exception 'That item isn''t part of this order.';
+  end if;
+  if p_rating is null or p_rating not between 1 and 5 then
+    raise exception 'Please choose from 1 to 5 stars.';
+  end if;
+  if length(coalesce(p_comment, '')) > 600 then
+    raise exception 'Please keep your review under 600 characters.';
+  end if;
+  v_name := left(coalesce(nullif(btrim(p_name), ''), split_part(o.customer_name, ' ', 1)), 40);
+
+  insert into public.reviews (product_id, order_id, rating, comment, name)
+  values (p_product_id, o.id, p_rating, nullif(btrim(coalesce(p_comment, '')), ''), v_name)
+  on conflict (order_id, product_id) do update
+    set rating = excluded.rating, comment = excluded.comment, name = excluded.name, created_at = now();
+end;
+$$;
+
+revoke all on function public.review_targets(uuid) from public;
+revoke all on function public.submit_review(uuid, uuid, integer, text, text) from public;
+grant execute on function public.review_targets(uuid) to anon, authenticated;
+grant execute on function public.submit_review(uuid, uuid, integer, text, text) to anon, authenticated;

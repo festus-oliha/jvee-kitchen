@@ -135,12 +135,12 @@ export default async (req: Request) => {
       await sendOrRelease("orders", claimed.id, async () => {
       const [o] = await db(`orders?id=eq.${claimed.id}&select=*,order_items(item_name,unit_price,quantity),locations(name)`, { method: "GET" });
       const items = o.order_items as { item_name: string; unit_price: number; quantity: number }[];
-      const payNow = o.fulfilment === "delivery" ? o.subtotal : o.total;
+      const payNow = o.subtotal; // delivery is paid to the rider, never upfront
       const rows = items.map((i) => `<tr><td style="padding:3px 0">${i.quantity} × ${esc(i.item_name)}</td><td style="text-align:right">${naira(i.unit_price * i.quantity)}</td></tr>`).join("");
       const html = shell(`New order ${esc(o.code)} · ${esc(o.locations.name)}`, `
         <p style="margin:0 0 10px"><b>${o.fulfilment === "delivery" ? "Delivery" : "Pickup"}</b> · placed ${when(o.created_at)}${o.needed_for ? ` · <b>needed ${when(o.needed_for)}</b>` : ""}</p>
         <table style="width:100%;border-collapse:collapse;font-size:15px">${rows}
-          ${o.delivery_fee ? `<tr><td style="color:#4D7563">Delivery (paid on arrival)</td><td style="text-align:right;color:#4D7563">${naira(o.delivery_fee)}</td></tr>` : ""}
+          ${o.fulfilment === "delivery" ? `<tr><td style="color:#4D7563">Delivery (rider's fee, paid on arrival)</td><td style="text-align:right;color:#4D7563">${o.delivery_fee ? naira(o.delivery_fee) : "by rider"}</td></tr>` : ""}
           <tr><td style="padding-top:6px;border-top:1px solid #D6E2D3"><b>Total</b></td><td style="text-align:right;padding-top:6px;border-top:1px solid #D6E2D3"><b>${naira(o.total)}</b></td></tr>
         </table>
         <p style="background:#FFF1D6;color:#5C3800;padding:10px 12px;border-radius:10px">Wait for a transfer of <b>${naira(payNow)}</b> with reference <b>${esc(o.code)}</b>, then mark it paid on the board.</p>
