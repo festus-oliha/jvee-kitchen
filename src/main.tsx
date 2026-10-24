@@ -10,6 +10,7 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import Basket from "./pages/Basket";
+import Track from "./pages/Track";
 import NotFound from "./pages/NotFound";
 import Checkout from "./pages/Checkout";
 import OrderStatus from "./pages/OrderStatus";
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
       { path: "/checkout", element: <Checkout /> },
       { path: "/order/:token", element: <OrderStatus /> },
       { path: "/basket", element: <Basket /> },
+      { path: "/track", element: <Track /> },
       { path: "*", element: <NotFound /> },
     ],
   },

@@ -268,7 +268,14 @@ function OrderCard({ order: o, now, showLocation, locationName, onChanged }: {
     finally { setBusy(false); }
   }
 
-  const wa = `https://wa.me/${internationalPhone(o.phone)}?text=${encodeURIComponent(`Hello ${o.customer_name.split(" ")[0]}, this is JVee Crunch Kitchen about your order ${o.code}. `)}`;
+  // The message includes the customer's tracking link, so they can always find their order again
+  const track = `${window.location.origin}/order/${o.tracking_token}`;
+  const waText = needsPayment
+    ? `Hello ${o.customer_name.split(" ")[0]}, this is JVee Crunch Kitchen about your order ${o.code}. Please pay ${naira(due)} by transfer with ${o.code} as the reference, and we'll start right away. Account details and live status: ${track}`
+    : o.paid && o.status === "received"
+      ? `Hello ${o.customer_name.split(" ")[0]}, we've received your payment for order ${o.code}. Thank you! Follow your order here: ${track}`
+      : `Hello ${o.customer_name.split(" ")[0]}, this is JVee Crunch Kitchen about your order ${o.code}. Track it here: ${track}`;
+  const wa = `https://wa.me/${internationalPhone(o.phone)}?text=${encodeURIComponent(waText)}`;
   const neededSoon = o.needed_for && new Date(o.needed_for).getTime() - now < 3 * 3600_000;
 
   return (

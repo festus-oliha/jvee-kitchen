@@ -83,7 +83,7 @@ export function recentOrders(): RecentOrder[] {
   }
 }
 
-function rememberOrder(token: string, code: string) {
+export function rememberOrder(token: string, code: string) {
   try {
     const list = [{ token, code, at: new Date().toISOString() }, ...recentOrders().filter((o) => o.token !== token)].slice(0, 5);
     localStorage.setItem(RECENT_KEY, JSON.stringify(list));
@@ -124,4 +124,23 @@ export async function submitEnquiry(e: NewEnquiry): Promise<{ ok: true } | { ok:
   } catch (err) {
     return { ok: false, kind: "network", message: (err as Error).message };
   }
+}
+
+/** "Track my order": finds the tracking link when the order code and phone number both match. */
+export async function findOrder(code: string, phone: string): Promise<{ ok: true; token: string } | { ok: false; message: string }> {
+  if (!supabase) return { ok: false, message: "Tracking needs the database. Add your Supabase settings to .env first." };
+  try {
+    const { data, error } = await supabase.rpc("find_order", { p_code: code, p_phone: phone });
+    if (error) return { ok: false, message: "We couldn't check right now. Check your internet and try again." };
+    if (!data) return { ok: false, message: "We couldn't find an order with that code and phone number. Check both, or WhatsApp us on 0805 892 3302." };
+    rememberOrder(data as string, code.toUpperCase().startsWith("JV") ? code.toUpperCase() : `JV-${code.toUpperCase()}`);
+    return { ok: true, token: data as string };
+  } catch {
+    return { ok: false, message: "We couldn't check right now. Check your internet and try again." };
+  }
+}
+
+/** Full tracking address for an order, e.g. https://jvee-kitchen.netlify.app/order/… */
+export function trackingUrl(token: string): string {
+  return `${window.location.origin}/order/${token}`;
 }

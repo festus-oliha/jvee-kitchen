@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
-import { fetchOrder, payNow, whatsappLink, type OrderStatus as Status, type TrackedOrder } from "../lib/orders";
+import { fetchOrder, payNow, trackingUrl, whatsappLink, type OrderStatus as Status, type TrackedOrder } from "../lib/orders";
 import { naira } from "../lib/money";
 import { ChatIcon } from "../components/Icons";
 
@@ -69,11 +69,12 @@ export default function OrderStatus() {
         <h1 className="text-[24px] font-extrabold">{order === null ? "We can't find that order" : "We couldn't load your order"}</h1>
         <p className="max-w-sm text-muted">
           {order === null
-            ? "The tracking link may be incomplete. Check the link, or call or WhatsApp us on 0805 892 3302 with your order code."
+            ? "The tracking link may be incomplete. Find your order on the Track order page with your code and phone number, or WhatsApp us on 0805 892 3302."
             : "Check your internet connection and try again."}
         </p>
         {order === undefined && <button onClick={load} className="btn-primary">Try again</button>}
-        <Link to="/menu" className="font-semibold text-emerald underline">Back to the menu</Link>
+        <Link to="/track" className="btn-primary">Track order</Link>
+        <Link to="/menu" className="font-semibold text-emerald-dark underline">Back to the menu</Link>
       </div>
     );
 
@@ -226,7 +227,13 @@ export default function OrderStatus() {
             className="flex h-14 items-center justify-center gap-2.5 rounded-2xl bg-deep text-[15px] font-bold text-white hover:bg-[#0a4a35]">
             <span className="text-zest"><ChatIcon size={20} /></span> Message us about {o.code}
           </a>
-          <p className="text-center text-xs text-muted">Bookmark this page to check your order later.</p>
+          <a href={`https://wa.me/?text=${encodeURIComponent(`My JVee Crunch Kitchen order ${o.code}. Track it here: ${trackingUrl(token)}`)}`} target="_blank" rel="noreferrer"
+            className="btn-secondary h-12 rounded-2xl text-[15px]">
+            <ChatIcon /> Save this link to WhatsApp
+          </a>
+          <p className="text-center text-xs leading-relaxed text-muted">
+            Send it to yourself ("Message yourself") or to whoever is collecting. You can also find this order any time on <Link to="/track" className="font-semibold text-emerald-dark underline">Track order</Link> with code {o.code} and your phone number.
+          </p>
         </div>
       </div>
     </div>

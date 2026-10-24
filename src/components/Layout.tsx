@@ -32,6 +32,7 @@ function Header() {
         <nav className="hidden gap-6 md:flex" aria-label="Main">
           <NavLink to="/menu" className={navClass}>Menu</NavLink>
           <NavLink to="/basket" className={navClass}>Custom baskets</NavLink>
+          <NavLink to="/track" className={navClass}>Track order</NavLink>
           <a href="#contact" className={navClass({ isActive: false })}>Contact</a>
         </nav>
         <div className="ml-auto flex items-center gap-2.5">
@@ -70,6 +71,7 @@ function Footer() {
         <div>
           <div className="text-xs font-semibold uppercase tracking-[1px] text-zest">Call or WhatsApp</div>
           <div className="text-xl font-bold">{ORDER_PHONE}</div>
+          <Link to="/track" className="mt-3 inline-flex h-10 items-center rounded-xl bg-zest px-4 text-sm font-bold text-deep">Track your order</Link>
         </div>
         {menu.locations.map((l) => (
           <div key={l.id}>

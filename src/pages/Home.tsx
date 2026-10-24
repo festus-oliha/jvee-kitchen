@@ -37,6 +37,7 @@ export default function Home() {
             </Link>
             <span className="text-[13px] text-mint sm:hidden">{open ? "Open now" : "Order now, made from 8am"}</span>
           </div>
+          <Link to="/track" className="relative w-fit text-sm font-semibold text-mint underline underline-offset-4 hover:text-white">Already ordered? Track your order</Link>
         </div>
 
         {/* Categories */}

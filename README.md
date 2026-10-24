@@ -3,7 +3,7 @@
 Ordering website for **JVee Crunch Kitchen**: homemade chin chin and cakes, fresh veggie trays, small chops and chilled drinks, with kitchens in Benin City and Abuja.
 
 **Developer:** JVeesoft-IT Solutions and Services Ltd (JVeesoft-IT)
-**Version:** 0.4.1 · Milestone 4 (Email alerts, custom baskets, photos, link previews)
+**Version:** 0.5.0 · Milestone 4 (Email alerts, custom baskets, photos, link previews)
 
 Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 
@@ -34,11 +34,18 @@ Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 | Product photos: upload in **Admin > Products > Edit**, shrunk automatically | Done |
 | Link previews for WhatsApp, Facebook, LinkedIn and X; phone home-screen icon | Done |
 | Speed and accessibility checks (Lighthouse on phone: 98–99 speed, 95–100 accessibility, 100 SEO) | Done |
+| Order tracking: **Track order** page (order code + phone number), "Save this link to WhatsApp" on the order page, tracking link in the staff WhatsApp messages | Done (0.5.0) |
 | Final testing with the owner's real details, then launch | Milestone 5 |
+
+**How customers track an order:** the order page updates by itself. To find it again later they can use the **Track order** page (header, footer and home page) with their order code and phone number; both must match, so nobody can look up another person's order. Orders placed or found on a phone are also listed there. Staff WhatsApp messages from the board include the customer's tracking link.
 
 **How payment works:** after placing an order the customer sees the account details and the amount to pay now (the items; for delivery, the delivery fee is paid on arrival). They can send the receipt on WhatsApp. Staff check the bank app for the order code, tap **Transfer received**, and only then can they tap **Start preparing**. The database enforces this, so an unpaid order can't be started by mistake. Unpaid orders can be cancelled with the reason "No payment received".
 
 ---
+
+## Updating to 0.5.0 (order tracking)
+
+Run `supabase/extras.sql` again in the SQL Editor (safe; it adds the `find_order` function for the Track order page). Then extract the zip over your project and push.
 
 ## Updating to 0.4.0 (milestone 4)
 
@@ -213,6 +220,7 @@ src/
   main.tsx              page routes
   pages/                Home, Menu, Checkout, OrderStatus, and placeholders for later milestones
   pages/Basket.tsx      custom basket enquiry form
+  pages/Track.tsx       find an order by code and phone number
   pages/admin/          SignIn, AdminApp (frame and access check), Orders, Enquiries, Products, Settings
   components/           Layout, ProductCard, OptionPicker, CartBar, QuantityStepper, LocationNotice, Icons
   lib/
@@ -230,7 +238,7 @@ supabase/
   schema.sql            tables and access rules (fresh database only)
   ordering.sql          place_order and order_status functions
   admin.sql             next_status, set_paid and staff functions
-  extras.sql            basket enquiries, email tracking, product photo storage
+  extras.sql            basket enquiries, email tracking, product photo storage, find_order
 netlify/functions/
   notify.mts            emails the owner about new orders and basket enquiries
   seed.sql              both locations and the launch menu (run once)
@@ -267,6 +275,7 @@ If you change prices in `seed.sql` before launch, change them in `src/lib/demo-d
 - **"This account isn't on the staff list":** the sign-in works but hasn't been given access. The founder adds them in **Settings > Staff** (for the very first founder, run `make_founder` as above).
 - **Board shows "Checking every 30 seconds" instead of "Live":** that still works. For live updates, check **Database > Publications > supabase_realtime** includes the `orders` table.
 - **No email after an order:** first open `https://jvee-kitchen.netlify.app/.netlify/functions/notify` in your browser. It lists each email setting as "ok", "missing" or what looks wrong, and whether the database answers (it never shows the keys). Fix anything not "ok", redeploy, and place a new test order. For more detail, open **Logs > Functions > notify** in Netlify. "not set up" means a setting from the email section is missing; a Resend 403 means `ORDER_EMAIL_TO` isn't your own Resend address (until a domain is verified). Redeploy after changing settings.
+- **Track order says it can't find an order that exists:** check the phone number is the one used at checkout. If it says "couldn't check right now" for everyone, run `supabase/extras.sql` (the `find_order` function is missing).
 - **"Photo storage isn't set up yet" when adding a photo:** run `supabase/extras.sql`.
 - **"Could not find the function public.submit_enquiry" on the basket form:** run `supabase/extras.sql`.
 - **A link shared on WhatsApp shows an old preview:** WhatsApp keeps previews for a while. Add `?v=2` to the end of the link to see the new one.

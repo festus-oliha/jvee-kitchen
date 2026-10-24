@@ -103,3 +103,22 @@ create policy "founder updates product photos" on storage.objects for update to 
   using (bucket_id = 'product-photos' and public.is_founder());
 create policy "founder deletes product photos" on storage.objects for delete to authenticated
   using (bucket_id = 'product-photos' and public.is_founder());
+
+-- ---------------------------------------------------------------------
+-- find_order: "Track my order" page. Returns the tracking link token only
+-- when BOTH the order code and the phone number match, so nobody can look
+-- up someone else's order with a code alone. (v0.5.0)
+-- ---------------------------------------------------------------------
+create or replace function public.find_order(p_code text, p_phone text)
+returns uuid
+language sql stable security definer set search_path = public as $$
+  select tracking_token
+    from public.orders
+   where code = upper(regexp_replace(btrim(coalesce(p_code, '')), '^(JV)?-?', 'JV-', 'i'))
+     and length(regexp_replace(coalesce(p_phone, ''), '\D', '', 'g')) >= 10
+     and right(regexp_replace(phone, '\D', '', 'g'), 10) = right(regexp_replace(coalesce(p_phone, ''), '\D', '', 'g'), 10)
+   limit 1;
+$$;
+
+revoke all on function public.find_order(text, text) from public;
+grant execute on function public.find_order(text, text) to anon, authenticated;
