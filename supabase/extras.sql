@@ -231,3 +231,28 @@ revoke all on function public.review_targets(uuid) from public;
 revoke all on function public.submit_review(uuid, uuid, integer, text, text) from public;
 grant execute on function public.review_targets(uuid) to anon, authenticated;
 grant execute on function public.submit_review(uuid, uuid, integer, text, text) to anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- Proteins (v0.6.1): peppered chicken and peppered meat, with photos.
+-- They start HIDDEN with no price. To sell them: Admin > Products >
+-- Proteins > Edit, enter the real price(s), Save, then switch "On the menu" on.
+-- ---------------------------------------------------------------------
+update public.categories set sort_order = 6 where id = 'cakes'  and sort_order = 5;
+update public.categories set sort_order = 7 where id = 'drinks' and sort_order = 6;
+insert into public.categories (id, name, sort_order) values ('proteins', 'Proteins', 5)
+on conflict (id) do nothing;
+
+insert into public.products (slug, category_id, name, description, photo_url, active, sort_order) values
+  ('peppered-chicken', 'proteins', 'Peppered chicken',
+   'Tender chicken, well seasoned and fried, tossed with sweet peppers and onions.',
+   '/photos/peppered-chicken.webp', false, 10),
+  ('peppered-meat', 'proteins', 'Peppered meat',
+   'Spicy peppered meat with red and yellow peppers and fresh onion rings.',
+   '/photos/peppered-meat-tray.webp', false, 11)
+on conflict (slug) do nothing;
+
+insert into public.product_options (product_id, label, price, sort_order)
+select p.id, 'Tray', 0, 1                                       -- PLACEHOLDER price: set it before showing
+  from public.products p
+ where p.slug in ('peppered-chicken', 'peppered-meat')
+   and not exists (select 1 from public.product_options o where o.product_id = p.id);

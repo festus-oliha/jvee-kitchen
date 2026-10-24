@@ -28,8 +28,10 @@ insert into public.categories (id, name, sort_order) values
 ('gift-packages', 'Gift packages', 2),
 ('veggie-trays',  'Veggie trays',  3),
 ('small-chops',   'Small chops',   4),
-('cakes',         'Cakes',         5),
-('drinks',        'Drinks',        6);
+('proteins',      'Proteins',      5),
+('cakes',         'Cakes',         6),
+('drinks',        'Drinks',        7)
+on conflict (id) do update set name = excluded.name, sort_order = excluded.sort_order;
 
 -- Products ---------------------------------------------------------------
 insert into public.products (slug, category_id, name, description, notice_hours, enquiry_only, sort_order) values
@@ -74,3 +76,15 @@ join (values
 
 -- First real product photo, shipped with the website in public/photos (v0.6.0)
 update public.products set photo_url = '/photos/veggie-tray-party.webp' where slug = 'mixed-veggie-tray';
+
+-- Proteins (v0.6.1): hidden until the founder sets the prices in Admin > Products
+insert into public.products (slug, category_id, name, description, photo_url, active, sort_order) values
+  ('peppered-chicken', 'proteins', 'Peppered chicken',
+   'Tender chicken, well seasoned and fried, tossed with sweet peppers and onions.', '/photos/peppered-chicken.webp', false, 10),
+  ('peppered-meat', 'proteins', 'Peppered meat',
+   'Spicy peppered meat with red and yellow peppers and fresh onion rings.', '/photos/peppered-meat-tray.webp', false, 11)
+on conflict (slug) do nothing;
+insert into public.product_options (product_id, label, price, sort_order)
+select p.id, 'Tray', 0, 1 from public.products p                                                     -- PLACEHOLDER price
+ where p.slug in ('peppered-chicken', 'peppered-meat')
+   and not exists (select 1 from public.product_options o where o.product_id = p.id);

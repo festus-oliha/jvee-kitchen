@@ -200,6 +200,17 @@ export async function addProduct(p: { name: string; description: string; categor
   }
 }
 
+/** Adds a menu category from the product form, e.g. "Proteins". */
+export async function addCategory(name: string, sortOrder: number): Promise<Category> {
+  const clean = name.trim().replace(/\s+/g, " ");
+  const label = clean.charAt(0).toUpperCase() + clean.slice(1);
+  const id = slugify(label);
+  const { data, error } = await db().from("categories").insert({ id, name: label, sort_order: sortOrder }).select("*").single();
+  if (error?.code === "23505") throw new Error(`There's already a category called "${label}". Choose it from the list.`);
+  fail(error);
+  return data as Category;
+}
+
 export async function deleteProduct(id: string): Promise<void> {
   const { error, count } = await db().from("products").delete({ count: "exact" }).eq("id", id);
   fail(error);

@@ -6,6 +6,8 @@ import { CATEGORY_TILE, CategoryArt, CheckCircle, Leaf } from "../components/Ico
 
 export default function Home() {
   const { menu, location, setLocationId, source } = useMenu();
+  // Only categories that have something on the menu (e.g. Proteins appears once its items are switched on)
+  const shownCategories = menu.categories.filter((c) => menu.products.some((p) => p.category_id === c.id));
   const featured = menu.products.find((p) => p.slug === "basic-unique-package");
   const popular = ["homemade-chin-chin", "basic-unique-package", "naked-fruit-cake"]
     .map((s) => menu.products.find((p) => p.slug === s))
@@ -44,11 +46,12 @@ export default function Home() {
         <div className="flex flex-col gap-3 lg:flex-[1_1_45%]">
           <h2 className="text-xl font-bold tracking-[-0.5px] lg:sr-only">What we make</h2>
           <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5 lg:h-full">
-            {menu.categories.map((c) => (
+            {shownCategories.map((c, i) => (
               <Link
                 key={c.id}
                 to={`/menu#${c.id}`}
-                className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl px-1 py-3 text-center hover:brightness-[0.97] sm:gap-2.5 sm:rounded-[20px] sm:py-5 ${CATEGORY_TILE[c.id] ?? "bg-mint"}`}
+                className={`flex items-center justify-center gap-1.5 rounded-2xl px-1 py-3 text-center hover:brightness-[0.97] sm:gap-2.5 sm:rounded-[20px] sm:py-5 ${CATEGORY_TILE[c.id] ?? "bg-mint"} ${
+                  shownCategories.length % 3 === 1 && i === shownCategories.length - 1 ? "col-span-3 flex-row" : "flex-col"}`}
               >
                 <CategoryArt category={c.id} />
                 <span className="text-[13px] font-semibold sm:text-[15px]">{c.name}</span>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useMenu } from "../../lib/menu";
 import { naira } from "../../lib/money";
 import {
-  addProduct, deleteProduct, fetchCatalogue, removeProductPhoto, saveOptions, setSoldOut, updateProduct, uploadProductPhoto,
+  addCategory, addProduct, deleteProduct, fetchCatalogue, removeProductPhoto, saveOptions, setSoldOut, updateProduct, uploadProductPhoto,
   type AdminCatalogue, type AdminProduct, type OptionDraft,
 } from "../../lib/admin";
 import { CategoryArt } from "../../components/Icons";
@@ -95,7 +95,7 @@ function ProductRow({ product: p, cat, onSaved }: { product: AdminProduct; cat: 
   }
 
   const prices = p.product_options.map((o) => o.price);
-  const priceText = prices.length ? (Math.min(...prices) === Math.max(...prices) ? naira(prices[0]) : `${naira(Math.min(...prices))} – ${naira(Math.max(...prices))}`) : "No price";
+  const priceText = prices.some((x) => x <= 0) ? "Price not set yet" : prices.length ? (Math.min(...prices) === Math.max(...prices) ? naira(prices[0]) : `${naira(Math.min(...prices))} – ${naira(Math.max(...prices))}`) : "No price";
 
   return (
     <article aria-label={p.name} className={`rounded-[18px] border bg-surface p-4 ${p.active ? "border-line" : "border-dashed border-[#B9C6BA] opacity-80"}`}>
@@ -114,7 +114,10 @@ function ProductRow({ product: p, cat, onSaved }: { product: AdminProduct; cat: 
 
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 border-t border-line pt-3 text-sm">
         <label className="flex items-center gap-2.5 font-semibold">
-          <Toggle on={p.active} disabled={busy} label={`Show ${p.name} on the menu`} onChange={(v) => run(() => updateProduct(p.id, { active: v }), v ? `${p.name} is back on the menu` : `${p.name} is hidden from the menu`)} />
+          <Toggle on={p.active} disabled={busy} label={`Show ${p.name} on the menu`} onChange={(v) => {
+            if (v && !p.enquiry_only && p.product_options.some((o) => o.price <= 0)) { setError(`Set the price for ${p.name} first: tap Edit, enter the price, Save, then switch it on.`); return; }
+            run(() => updateProduct(p.id, { active: v }), v ? `${p.name} is back on the menu` : `${p.name} is hidden from the menu`);
+          }} />
           On the menu
         </label>
         {cat.locations.map((l) => {
@@ -179,6 +182,8 @@ function ProductRow({ product: p, cat, onSaved }: { product: AdminProduct; cat: 
   );
 }
 
+const NEW_CATEGORY = "__new__";
+
 type Details = { name: string; description: string; category_id: string; notice_hours: number };
 
 function ProductEditor({ product, cat, twoAxis, busy, onSave }: {
@@ -188,6 +193,24 @@ function ProductEditor({ product, cat, twoAxis, busy, onSave }: {
   const [name, setName] = useState(product?.name ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [category, setCategory] = useState(product?.category_id ?? cat.categories[0]?.id ?? "");
+  // Categories can be added right here from the dropdown, without any code
+  const [categories, setCategories] = useState(cat.categories);
+  const [addingCat, setAddingCat] = useState(false);
+  const [newCat, setNewCat] = useState("");
+  const [catBusy, setCatBusy] = useState(false);
+  const [catError, setCatError] = useState<string | null>(null);
+
+  async function createCategory() {
+    if (newCat.trim().length < 2) return setCatError("Type the category name.");
+    setCatBusy(true); setCatError(null);
+    try {
+      const c = await addCategory(newCat, Math.max(0, ...categories.map((x) => x.sort_order)) + 1);
+      setCategories((list) => [...list, c]);
+      setCategory(c.id);
+      setAddingCat(false); setNewCat("");
+    } catch (e) { setCatError((e as Error).message); }
+    finally { setCatBusy(false); }
+  }
   const [notice, setNotice] = useState(String(product?.notice_hours ?? 0));
   const [rows, setRows] = useState<(OptionDraft & { key: string; priceText: string })[]>(() =>
     (product?.product_options.length ? product.product_options : [{ id: undefined, label: "", size: null, type: null, price: 0 }]).map((o, i) => ({
@@ -226,11 +249,27 @@ function ProductEditor({ product, cat, twoAxis, busy, onSave }: {
         <label className="flex flex-col gap-1.5 text-sm font-semibold">Name
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className={field} />
         </label>
-        <label className="flex flex-col gap-1.5 text-sm font-semibold">Category
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className={field}>
-            {cat.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        <div className="flex flex-col gap-1.5 text-sm font-semibold">
+          <label htmlFor={`cat-${product?.id ?? "new"}`}>Category</label>
+          <select id={`cat-${product?.id ?? "new"}`} value={category} className={field}
+            onChange={(e) => { if (e.target.value === NEW_CATEGORY) { setAddingCat(true); } else { setCategory(e.target.value); setAddingCat(false); } }}>
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            <option value={NEW_CATEGORY}>+ Add a new category…</option>
           </select>
-        </label>
+          {addingCat && (
+            <div className="flex flex-col gap-2 rounded-lg bg-mint-light p-2.5">
+              <div className="flex gap-2">
+                <input aria-label="New category name" autoFocus value={newCat} onChange={(e) => setNewCat(e.target.value)} maxLength={40} placeholder="e.g. Proteins, Pastries, Juices"
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); createCategory(); } }}
+                  className={`${field} h-10 min-w-0 flex-1 font-normal`} />
+                <button type="button" onClick={createCategory} disabled={catBusy} className="h-10 rounded-lg bg-deep px-3.5 text-white">{catBusy ? "Adding…" : "Add"}</button>
+                <button type="button" onClick={() => { setAddingCat(false); setNewCat(""); setCatError(null); }} className="h-10 rounded-lg px-2 font-normal text-muted">Cancel</button>
+              </div>
+              {catError && <p role="alert" className="text-[13px] text-[#7A1F17]">{catError}</p>}
+              <p className="text-xs font-normal text-muted">It shows on the menu and home page as soon as it has a product switched on.</p>
+            </div>
+          )}
+        </div>
         <label className="flex flex-col gap-1.5 text-sm font-semibold sm:col-span-2">
           <span className="flex justify-between gap-2">Description <span className="font-normal text-muted">Shown on the menu and the product page · {description.length}/400</span></span>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={400} rows={3} placeholder="A little about it: what's inside, size, how many it serves, why people love it."
@@ -285,7 +324,7 @@ function AddProduct({ cat, onClose, onSaved }: { cat: AdminCatalogue; onClose: (
         <h2 className="text-lg font-bold">New product</h2>
         <button type="button" onClick={onClose} className="h-10 rounded-xl px-3 text-sm font-semibold text-muted">Cancel</button>
       </div>
-      <p className="text-sm text-muted">It goes on the menu as soon as you add it. Photos come in the next update.</p>
+      <p className="text-sm text-muted">It goes on the menu as soon as you add it. To add a photo, tap Edit on it after saving.</p>
       {error && <p role="alert" className="mt-3 rounded-lg bg-[#FCE4E2] px-3 py-2 text-sm font-semibold text-[#7A1F17]">{error}</p>}
       <ProductEditor product={null} cat={cat} twoAxis={false} busy={busy}
         onSave={async (d, options) => {

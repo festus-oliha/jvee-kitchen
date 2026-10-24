@@ -3,7 +3,7 @@
 Ordering website for **JVee Crunch Kitchen**: homemade chin chin and cakes, fresh veggie trays, small chops and chilled drinks, with kitchens in Benin City and Abuja.
 
 **Developer:** JVeesoft-IT Solutions and Services Ltd (JVeesoft-IT)
-**Version:** 0.6.0 · Milestone 4 (Email alerts, custom baskets, photos, link previews)
+**Version:** 0.6.1 · Milestone 4 (Email alerts, custom baskets, photos, link previews)
 
 Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 
@@ -44,6 +44,8 @@ Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 
 **Reviews:** when an order is marked completed, the customer's order page asks "How was it?" for each item. Reviews show on the product page with "Verified order" and the average shows as stars on the menu. Only customers with a completed order can review, once per item per order (sending again updates it). The founder can hide a review that isn't genuine (and show it again) or delete it in **Admin > Reviews**. Tip: on a completed order, the WhatsApp button now asks the customer for a review.
 
+**Categories:** in **Admin > Products > + Add a product** (or Edit), open the Category list and pick **+ Add a new category…**, type the name (for example "Pastries") and tap Add. It appears on the menu and home page once it has a product switched on. A **Proteins** category comes ready with Peppered chicken and Peppered meat (with photos); they stay hidden until you enter their prices and switch "On the menu" on. The admin won't switch on an item that has no price.
+
 **Descriptions and photos:** in **Admin > Products > Edit**, the Description box (up to 400 characters) is shown on the menu card and in full on the product page. Add photos with **Add a photo** in the same editor.
 
 **How customers track an order:** the order page updates by itself. To find it again later they can use the **Track order** page (header, footer and home page) with their order code and phone number; both must match, so nobody can look up another person's order. Orders placed or found on a phone are also listed there. Staff WhatsApp messages from the board include the customer's tracking link.
@@ -51,6 +53,10 @@ Planning documents are in [`docs/`](docs/): requirements, design and tech stack.
 **How payment works:** after placing an order the customer sees the account details and the amount to pay now (the items; for delivery, the delivery fee is paid on arrival). They can send the receipt on WhatsApp. Staff check the bank app for the order code, tap **Transfer received**, and only then can they tap **Start preparing**. The database enforces this, so an unpaid order can't be started by mistake. Unpaid orders can be cancelled with the reason "No payment received".
 
 ---
+
+## Updating to 0.6.1 (Proteins, new categories from the admin)
+
+Run `supabase/extras.sql` again in the SQL Editor (safe; adds the Proteins category with its two hidden items). Extract the zip over your project and push.
 
 ## Updating to 0.6.0 (rider delivery fee, product pages, reviews)
 

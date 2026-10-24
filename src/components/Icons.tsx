@@ -24,6 +24,7 @@ export const CATEGORY_TILE: Record<string, string> = {
   "gift-packages": "bg-tile-gift",
   "veggie-trays": "bg-tile-veggie",
   "small-chops": "bg-tile-chops",
+  proteins: "bg-tile-protein",
   cakes: "bg-tile-cake",
   drinks: "bg-tile-drink",
 };
@@ -79,7 +80,27 @@ export function CategoryArt({ category, size = 44 }: { category: string; size?: 
           <circle cx="42" cy="27" r="4.5" fill="#F28C28" />
         </svg>
       );
+    case "proteins":
+      return (
+        <svg {...common}>
+          <path d="M40 10c8 0 14 6 14 14 0 9-8 15-16 15-3 0-5 1-7 3l-6 6a5 5 0 1 1-7 7 5 5 0 1 1-6-7l6-6c2-2 3-4 3-7 0-8 6-25 25-25z" fill="#C98A2E" />
+          <path d="M44 16c4 1 6 4 6 8" stroke="#F2C27A" strokeWidth="3" strokeLinecap="round" fill="none" />
+          <rect x="30" y="34" width="10" height="5" rx="2" transform="rotate(-45 35 36)" fill="#E0A23A" />
+          <path d="M14 46l4 4" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="47" cy="40" r="3" fill="#C2362B" /><circle cx="52" cy="34" r="2.5" fill="#E8C33A" />
+        </svg>
+      );
     default:
+      // Any category added from the admin: a covered serving dish
+      return (
+        <svg {...common}>
+          <path d="M10 44a22 22 0 0 1 44 0z" fill="#0B8F5A" />
+          <path d="M18 40a14 14 0 0 1 10-12" stroke="#A6E22E" strokeWidth="3" strokeLinecap="round" fill="none" />
+          <circle cx="32" cy="19" r="3.5" fill="#053B2A" />
+          <rect x="6" y="44" width="52" height="6" rx="3" fill="#053B2A" />
+        </svg>
+      );
+    case "drinks":
       return (
         <svg {...common}>
           <rect x="27" y="6" width="10" height="7" rx="2" fill="#0B8F5A" />
